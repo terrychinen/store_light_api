@@ -5,6 +5,8 @@ import dotenv from 'dotenv';
 import IndexRoutes from './routes/index.routes';
 import AuthRoutes from './routes/auth.routes';
 
+import EnvironmentRoutes from './routes/environment.routes';
+import { tokenValidation } from './middlewares/authentication';
 
 
 export class App {
@@ -40,5 +42,6 @@ export class App {
     routes() {
         this.app.use(IndexRoutes);
         this.app.use('/auth', AuthRoutes);
+        this.app.use('/environment', tokenValidation, EnvironmentRoutes);
     }
 }
