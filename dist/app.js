@@ -46,6 +46,7 @@ var dotenv_1 = __importDefault(require("dotenv"));
 var index_routes_1 = __importDefault(require("./routes/index.routes"));
 var auth_routes_1 = __importDefault(require("./routes/auth.routes"));
 var environment_routes_1 = __importDefault(require("./routes/environment.routes"));
+var category_routes_1 = __importDefault(require("./routes/category.routes"));
 var authentication_1 = require("./middlewares/authentication");
 var App = /** @class */ (function () {
     function App(port) {
@@ -80,6 +81,7 @@ var App = /** @class */ (function () {
     App.prototype.routes = function () {
         this.app.use(index_routes_1.default);
         this.app.use('/auth', auth_routes_1.default);
+        this.app.use('/category', authentication_1.tokenValidation, category_routes_1.default);
         this.app.use('/environment', authentication_1.tokenValidation, environment_routes_1.default);
     };
     return App;

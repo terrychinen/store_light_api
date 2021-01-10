@@ -120,7 +120,7 @@ export async function deleteCategory(req: Request, res: Response) {
 
 
 //================== BUSCAR CATEGORIA POR SU NOMBRE  ==================//
-export async function searchEnvironment(req: Request, res: Response){
+export async function searchCategory(req: Request, res: Response){
     const search = req.body.search;
     const state = Number(req.body.state);
 

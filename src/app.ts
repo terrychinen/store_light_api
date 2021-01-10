@@ -6,6 +6,8 @@ import IndexRoutes from './routes/index.routes';
 import AuthRoutes from './routes/auth.routes';
 
 import EnvironmentRoutes from './routes/environment.routes';
+import CategoryRoutes from './routes/category.routes';
+
 import { tokenValidation } from './middlewares/authentication';
 
 
@@ -42,6 +44,7 @@ export class App {
     routes() {
         this.app.use(IndexRoutes);
         this.app.use('/auth', AuthRoutes);
+        this.app.use('/category', tokenValidation, CategoryRoutes);
         this.app.use('/environment', tokenValidation, EnvironmentRoutes);
     }
 }

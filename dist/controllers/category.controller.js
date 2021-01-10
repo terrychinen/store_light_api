@@ -36,7 +36,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.searchEnvironment = exports.deleteCategory = exports.updateCategory = exports.createCategory = exports.getCategories = void 0;
+exports.searchCategory = exports.deleteCategory = exports.updateCategory = exports.createCategory = exports.getCategories = void 0;
 var query_1 = require("../query/query");
 //================== OBTENER TODOS LAS CATEGORIAS ==================//
 function getCategories(req, res) {
@@ -219,7 +219,7 @@ function deleteCategory(req, res) {
 }
 exports.deleteCategory = deleteCategory;
 //================== BUSCAR CATEGORIA POR SU NOMBRE  ==================//
-function searchEnvironment(req, res) {
+function searchCategory(req, res) {
     return __awaiter(this, void 0, void 0, function () {
         var search, state, querySearch, error_5;
         return __generator(this, function (_a) {
@@ -247,4 +247,4 @@ function searchEnvironment(req, res) {
         });
     });
 }
-exports.searchEnvironment = searchEnvironment;
+exports.searchCategory = searchCategory;
