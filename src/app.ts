@@ -6,6 +6,7 @@ import IndexRoutes from './routes/index.routes';
 import AuthRoutes from './routes/auth.routes';
 
 import CategoryRoutes from './routes/category.routes';
+import StoreRoutes from './routes/store.routes';
 import ProviderRoutes from './routes/provider.routes';
 import EnvironmentRoutes from './routes/environment.routes';
 
@@ -45,6 +46,7 @@ export class App {
     routes() {
         this.app.use(IndexRoutes);
         this.app.use('/auth', AuthRoutes);
+        this.app.use('/store', tokenValidation, StoreRoutes);
         this.app.use('/category', tokenValidation, CategoryRoutes);
         this.app.use('/provider', tokenValidation, ProviderRoutes);
         this.app.use('/environment', tokenValidation, EnvironmentRoutes);

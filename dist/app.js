@@ -46,6 +46,7 @@ var dotenv_1 = __importDefault(require("dotenv"));
 var index_routes_1 = __importDefault(require("./routes/index.routes"));
 var auth_routes_1 = __importDefault(require("./routes/auth.routes"));
 var category_routes_1 = __importDefault(require("./routes/category.routes"));
+var store_routes_1 = __importDefault(require("./routes/store.routes"));
 var provider_routes_1 = __importDefault(require("./routes/provider.routes"));
 var environment_routes_1 = __importDefault(require("./routes/environment.routes"));
 var authentication_1 = require("./middlewares/authentication");
@@ -82,6 +83,7 @@ var App = /** @class */ (function () {
     App.prototype.routes = function () {
         this.app.use(index_routes_1.default);
         this.app.use('/auth', auth_routes_1.default);
+        this.app.use('/store', authentication_1.tokenValidation, store_routes_1.default);
         this.app.use('/category', authentication_1.tokenValidation, category_routes_1.default);
         this.app.use('/provider', authentication_1.tokenValidation, provider_routes_1.default);
         this.app.use('/environment', authentication_1.tokenValidation, environment_routes_1.default);
