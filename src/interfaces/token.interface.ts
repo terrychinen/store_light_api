@@ -1,6 +1,6 @@
 export interface IToken {
-    token_id?: Number;
-    token_key: String;
-    created_at: String;
-    expires_in: Number;
+    token_id?: number;
+    token_key: string;
+    created_at: string;
+    expires_in: number;
 }

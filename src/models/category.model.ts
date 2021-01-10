@@ -1,7 +1,7 @@
 import { ICategory } from '../interfaces/category.interface';
 
 export class CategoryModel implements ICategory{
-    category_id?: Number;
+    category_id?: number;
     name: string;
-    state: Number;
+    state: number;
 }

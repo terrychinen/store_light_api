@@ -5,9 +5,10 @@ import dotenv from 'dotenv';
 import IndexRoutes from './routes/index.routes';
 import AuthRoutes from './routes/auth.routes';
 
-import CategoryRoutes from './routes/category.routes';
 import StoreRoutes from './routes/store.routes';
+import CategoryRoutes from './routes/category.routes';
 import ProviderRoutes from './routes/provider.routes';
+import CommodityRoutes from './routes/commodity.routes';
 import EnvironmentRoutes from './routes/environment.routes';
 
 import { tokenValidation } from './middlewares/authentication';
@@ -48,6 +49,7 @@ export class App {
         this.app.use('/auth', AuthRoutes);
         this.app.use('/store', tokenValidation, StoreRoutes);
         this.app.use('/category', tokenValidation, CategoryRoutes);
+        this.app.use('/commodity', tokenValidation, CommodityRoutes);
         this.app.use('/provider', tokenValidation, ProviderRoutes);
         this.app.use('/environment', tokenValidation, EnvironmentRoutes);
     }

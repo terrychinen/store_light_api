@@ -95,7 +95,7 @@ export async function refreshToken(req: Request, res: Response) {
 } 
 
 
-async function updateToken(res: Response, tokenID: String, newToken: string, expiresIn: Number) {
+async function updateToken(res: Response, tokenID: string, newToken: string, expiresIn: number) {
     let token = new TokenModel();
     token.token_key = newToken;
     token.created_at = moment().format('YYYY-MM-DD HH:mm:ss');

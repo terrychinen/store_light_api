@@ -1,5 +1,5 @@
 export interface IStore {
-    store_id?: Number;
+    store_id?: number;
     name: string;
-    state: Number;
+    state: number;
 }

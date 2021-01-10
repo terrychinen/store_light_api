@@ -1,5 +1,5 @@
 export interface IProvider {
-    provider_id?: Number;
+    provider_id?: number;
     name: string;
-    state: Number;
+    state: number;
 }
