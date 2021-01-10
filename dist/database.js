@@ -47,8 +47,8 @@ function connect() {
                         host: '0.0.0.0',
                         port: 3306,
                         user: 'root',
-                        password: '',
-                        database: 'almacen_db',
+                        password: process.env.DATABASE_PASSOWRD,
+                        database: 'store_db',
                         waitForConnections: true,
                         connectionLimit: 10,
                         queueLimit: 0

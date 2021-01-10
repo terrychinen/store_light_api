@@ -35,50 +35,37 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.App = void 0;
-var express_1 = __importDefault(require("express"));
-var morgan_1 = __importDefault(require("morgan"));
-var dotenv_1 = __importDefault(require("dotenv"));
-var index_routes_1 = __importDefault(require("./routes/index.routes"));
-var auth_routes_1 = __importDefault(require("./routes/auth.routes"));
-var App = /** @class */ (function () {
-    function App(port) {
-        this.app = express_1.default();
-        this.port = port;
-        dotenv_1.default.config();
-        this.settings();
-        this.middlewares();
-        this.routes();
-    }
-    App.prototype.settings = function () {
-        this.app.set('port', this.port || process.env.PORT || 3000);
-    };
-    App.prototype.middlewares = function () {
-        this.app.use(morgan_1.default('dev'));
-        this.app.use(express_1.default.urlencoded({ extended: false }));
-        this.app.use(express_1.default.json());
-    };
-    App.prototype.listen = function () {
-        return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.app.listen(this.app.get('port'), '0.0.0.0')];
-                    case 1:
-                        _a.sent();
-                        console.log('Server on port', this.app.get('port'));
-                        return [2 /*return*/];
-                }
-            });
+exports.query = void 0;
+var database_1 = require("../database");
+function query(queryString) {
+    return __awaiter(this, void 0, void 0, function () {
+        var conn, query_1, e_1;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    _a.trys.push([0, 3, , 4]);
+                    return [4 /*yield*/, database_1.connect()];
+                case 1:
+                    conn = _a.sent();
+                    return [4 /*yield*/, conn.query(queryString)];
+                case 2:
+                    query_1 = _a.sent();
+                    conn.end();
+                    if (!query_1)
+                        return [2 /*return*/, ({ ok: false, status: 400, message: 'Query error', result: [] })];
+                    return [2 /*return*/, ({
+                            ok: true,
+                            status: 200,
+                            message: 'Query successful',
+                            result: query_1
+                        })];
+                case 3:
+                    e_1 = _a.sent();
+                    return [2 /*return*/, ({ ok: false, status: 500, message: e_1.toString(), result: [] })];
+                case 4: return [2 /*return*/];
+            }
         });
-    };
-    App.prototype.routes = function () {
-        this.app.use(index_routes_1.default);
-        this.app.use('/auth', auth_routes_1.default);
-    };
-    return App;
-}());
-exports.App = App;
+    });
+}
+exports.query = query;

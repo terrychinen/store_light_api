@@ -1,6 +1,10 @@
 import express, { Application } from 'express';
 import morgan from 'morgan';
+import dotenv from 'dotenv';
+
 import IndexRoutes from './routes/index.routes';
+import AuthRoutes from './routes/auth.routes';
+
 
 
 export class App {
@@ -10,6 +14,8 @@ export class App {
     constructor(port?: number | string) {
         this.app = express();
         this.port = port;
+
+        dotenv.config();
 
         this.settings();
         this.middlewares();
@@ -33,5 +39,6 @@ export class App {
 
     routes() {
         this.app.use(IndexRoutes);
+        this.app.use('/auth', AuthRoutes);
     }
 }
