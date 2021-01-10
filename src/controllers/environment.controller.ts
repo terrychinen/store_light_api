@@ -20,7 +20,6 @@ export async function getEnvironments(req: Request, res: Response){
     }catch(error) {
         return res.status(500).json({ok: false, message: error});
     }
-
 }
 
 
@@ -50,7 +49,6 @@ export async function createEnvironment(req: Request, res: Response) {
     }catch(error) {
         return res.status(500).json({ok: false, message: error});
     }
-
 }
 
 
