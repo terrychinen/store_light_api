@@ -36,10 +36,10 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.searchCategory = exports.deleteCategory = exports.updateCategory = exports.createCategory = exports.getCategories = void 0;
+exports.searchProvider = exports.deleteProvider = exports.updateProvider = exports.createProvider = exports.getProviders = void 0;
 var query_1 = require("../query/query");
-//================== OBTENER TODAS LAS CATEGORIAS ==================//
-function getCategories(req, res) {
+//================== OBTENER TODOS LOS PROVEEDORES ==================//
+function getProviders(req, res) {
     return __awaiter(this, void 0, void 0, function () {
         var offset, state, getQuery, error_1;
         return __generator(this, function (_a) {
@@ -52,7 +52,7 @@ function getCategories(req, res) {
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
-                    getQuery = "SELECT * FROM category WHERE state = " + state + " ORDER BY category_id DESC LIMIT 10 OFFSET " + offset;
+                    getQuery = "SELECT * FROM provider WHERE state = " + state + " ORDER BY provider_id DESC LIMIT 10 OFFSET " + offset;
                     return [4 /*yield*/, query_1.query(getQuery).then(function (data) {
                             if (!data.ok)
                                 return res.status(data.status).json({ ok: false, message: data.message });
@@ -67,37 +67,37 @@ function getCategories(req, res) {
         });
     });
 }
-exports.getCategories = getCategories;
-//================== CREAR UNA CATEGORIA ==================//
-function createCategory(req, res) {
+exports.getProviders = getProviders;
+//================== CREAR UN PROVEEDOR ==================//
+function createProvider(req, res) {
     return __awaiter(this, void 0, void 0, function () {
-        var category, categoryName, queryCheck, error_2;
+        var provider, providerName, queryCheck, error_2;
         var _this = this;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    category = req.body;
-                    if (category.name == null || Number.isNaN(category.state))
+                    provider = req.body;
+                    if (provider.name == null || Number.isNaN(provider.state))
                         return [2 /*return*/, res.status(404).json({ ok: false, message: "La variable 'name' y 'state' son obligatorio!" })];
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
-                    categoryName = category.name;
-                    category.name = categoryName.charAt(0).toUpperCase() + categoryName.slice(1);
-                    queryCheck = "SELECT * FROM category WHERE name = \"" + category.name + "\"";
+                    providerName = provider.name;
+                    provider.name = providerName.charAt(0).toUpperCase() + providerName.slice(1);
+                    queryCheck = "SELECT * FROM provider WHERE name = \"" + provider.name + "\"";
                     return [4 /*yield*/, query_1.query(queryCheck).then(function (dataCheck) { return __awaiter(_this, void 0, void 0, function () {
                             var insertQuery;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
                                     case 0:
                                         if (dataCheck.result[0][0] != null) {
-                                            return [2 /*return*/, res.status(400).json({ ok: false, message: 'La categoría ya existe!' })];
+                                            return [2 /*return*/, res.status(400).json({ ok: false, message: 'El proveedor ya existe!' })];
                                         }
-                                        insertQuery = "INSERT INTO category (name, state) VALUES (\"" + category.name + "\", \"" + category.state + "\")";
+                                        insertQuery = "INSERT INTO provider (name, state) VALUES (\"" + provider.name + "\", \"" + provider.state + "\")";
                                         return [4 /*yield*/, query_1.query(insertQuery).then(function (data) {
                                                 if (!data.ok)
                                                     return res.status(data.status).json({ ok: false, message: data.message });
-                                                return res.status(data.status).json({ ok: true, message: 'Categoría creado correctamente' });
+                                                return res.status(data.status).json({ ok: true, message: 'Proveedor creado correctamente' });
                                             })];
                                     case 1: return [2 /*return*/, _a.sent()];
                                 }
@@ -112,25 +112,25 @@ function createCategory(req, res) {
         });
     });
 }
-exports.createCategory = createCategory;
-//================== ACTUALIZAR UNA CATEGORIA ==================//
-function updateCategory(req, res) {
+exports.createProvider = createProvider;
+//================== ACTUALIZAR UN PROVEEDOR ==================//
+function updateProvider(req, res) {
     return __awaiter(this, void 0, void 0, function () {
-        var category, categoryID, categoryName, queryCheckId, error_3;
+        var provider, providerID, providerName, queryCheckId, error_3;
         var _this = this;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    category = req.body;
-                    categoryID = req.params.category_id;
-                    if (category.name == null || Number.isNaN(category.state))
+                    provider = req.body;
+                    providerID = req.params.provider_id;
+                    if (provider.name == null || Number.isNaN(provider.state))
                         return [2 /*return*/, res.status(404).json({ ok: false, message: "La variable 'environment_id', 'name' y 'state' son obligatorio!" })];
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
-                    categoryName = category.name;
-                    category.name = categoryName.charAt(0).toUpperCase() + categoryName.slice(1);
-                    queryCheckId = "SELECT * FROM category WHERE category_id = \"" + categoryID + "\"";
+                    providerName = provider.name;
+                    provider.name = providerName.charAt(0).toUpperCase() + providerName.slice(1);
+                    queryCheckId = "SELECT * FROM provider WHERE provider_id = \"" + providerID + "\"";
                     return [4 /*yield*/, query_1.query(queryCheckId).then(function (dataCheckId) { return __awaiter(_this, void 0, void 0, function () {
                             var queryCheck;
                             var _this = this;
@@ -140,8 +140,8 @@ function updateCategory(req, res) {
                                         if (!dataCheckId.ok)
                                             return [2 /*return*/, res.status(500).json({ ok: false, message: dataCheckId.message })];
                                         if (dataCheckId.result[0][0] == null)
-                                            return [2 /*return*/, res.status(400).json({ ok: false, message: "La categor\u00EDa con el id " + categoryID + " no existe!" })];
-                                        queryCheck = "SELECT * FROM category WHERE name = \"" + category.name + "\"";
+                                            return [2 /*return*/, res.status(400).json({ ok: false, message: "El proveedor con el id " + providerID + " no existe!" })];
+                                        queryCheck = "SELECT * FROM provider WHERE name = \"" + provider.name + "\"";
                                         return [4 /*yield*/, query_1.query(queryCheck).then(function (dataCheck) { return __awaiter(_this, void 0, void 0, function () {
                                                 var updateQuery;
                                                 var _this = this;
@@ -151,13 +151,13 @@ function updateCategory(req, res) {
                                                             if (!dataCheck.ok)
                                                                 return [2 /*return*/, res.status(500).json({ ok: false, message: dataCheck.message })];
                                                             if (dataCheck.result[0][0] != null)
-                                                                return [2 /*return*/, res.status(406).json({ ok: false, message: 'La categoría ya existe!' })];
-                                                            updateQuery = "UPDATE category SET name=\"" + category.name + "\", state = \"" + category.state + "\" WHERE category_id = \"" + categoryID + "\"";
+                                                                return [2 /*return*/, res.status(406).json({ ok: false, message: 'El proveedor ya existe!' })];
+                                                            updateQuery = "UPDATE provider SET name=\"" + provider.name + "\", state = \"" + provider.state + "\" WHERE provider_id = \"" + providerID + "\"";
                                                             return [4 /*yield*/, query_1.query(updateQuery).then(function (dataUpdate) { return __awaiter(_this, void 0, void 0, function () {
                                                                     return __generator(this, function (_a) {
                                                                         if (!dataUpdate.ok)
                                                                             return [2 /*return*/, res.status(dataUpdate.status).json({ ok: false, message: dataUpdate.message })];
-                                                                        return [2 /*return*/, res.status(dataUpdate.status).json({ ok: true, message: 'La categoría se actualizó correctamente' })];
+                                                                        return [2 /*return*/, res.status(dataUpdate.status).json({ ok: true, message: 'El proveedor se actualizó correctamente' })];
                                                                     });
                                                                 }); })];
                                                         case 1: return [2 /*return*/, _a.sent()];
@@ -177,17 +177,17 @@ function updateCategory(req, res) {
         });
     });
 }
-exports.updateCategory = updateCategory;
-//================== ELIMINAR UNA CATEGORIA POR SU ID ==================//
-function deleteCategory(req, res) {
+exports.updateProvider = updateProvider;
+//================== ELIMINAR UN PROVEEDOR POR SU ID ==================//
+function deleteProvider(req, res) {
     return __awaiter(this, void 0, void 0, function () {
-        var categoryID, checkIdQuery, error_4;
+        var providerID, checkIdQuery, error_4;
         var _this = this;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    categoryID = req.params.category_id;
-                    checkIdQuery = "SELECT * FROM category WHERE category_id = " + categoryID;
+                    providerID = req.params.provider_id;
+                    checkIdQuery = "SELECT * FROM provider WHERE provider_id = " + providerID;
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
@@ -197,12 +197,12 @@ function deleteCategory(req, res) {
                                 switch (_a.label) {
                                     case 0:
                                         if (dataCheckId.result[0][0] == null)
-                                            return [2 /*return*/, res.status(400).json({ ok: false, message: "La categor\u00EDa con el id " + categoryID + " no existe!" })];
-                                        deleteQuery = "DELETE FROM category WHERE category_id = " + categoryID;
+                                            return [2 /*return*/, res.status(400).json({ ok: false, message: "El proveedor con el id " + providerID + " no existe!" })];
+                                        deleteQuery = "DELETE FROM provider WHERE provider_id = " + providerID;
                                         return [4 /*yield*/, query_1.query(deleteQuery).then(function (dataDelete) {
                                                 if (!dataDelete.ok)
                                                     return res.status(dataDelete.status).json({ ok: false, message: dataDelete.message });
-                                                return res.status(dataDelete.status).json({ ok: true, message: 'La categoría se eliminó correctamente' });
+                                                return res.status(dataDelete.status).json({ ok: true, message: 'El proveedor se eliminó correctamente' });
                                             })];
                                     case 1: return [2 /*return*/, _a.sent()];
                                 }
@@ -217,9 +217,9 @@ function deleteCategory(req, res) {
         });
     });
 }
-exports.deleteCategory = deleteCategory;
-//================== BUSCAR CATEGORIA POR SU NOMBRE  ==================//
-function searchCategory(req, res) {
+exports.deleteProvider = deleteProvider;
+//================== BUSCAR PROVEEDOR POR SU NOMBRE  ==================//
+function searchProvider(req, res) {
     return __awaiter(this, void 0, void 0, function () {
         var search, state, querySearch, error_5;
         return __generator(this, function (_a) {
@@ -232,7 +232,7 @@ function searchCategory(req, res) {
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
-                    querySearch = "SELECT * FROM category WHERE name LIKE \"%" + search + "%\" AND state = " + state + " LIMIT 10";
+                    querySearch = "SELECT * FROM provider WHERE name LIKE \"%" + search + "%\" AND state = " + state + " LIMIT 10";
                     return [4 /*yield*/, query_1.query(querySearch).then(function (data) {
                             if (!data.ok)
                                 return res.status(data.status).json({ ok: false, message: data.message });
@@ -247,4 +247,4 @@ function searchCategory(req, res) {
         });
     });
 }
-exports.searchCategory = searchCategory;
+exports.searchProvider = searchProvider;

@@ -3,7 +3,7 @@ import { Request, Response } from 'express';
 import { CategoryModel } from '../models/category.model';
 
 
-//================== OBTENER TODOS LAS CATEGORIAS ==================//
+//================== OBTENER TODAS LAS CATEGORIAS ==================//
 export async function getCategories(req: Request, res: Response){
     const offset = Number(req.query.offset);
     const state = Number(req.query.state);
@@ -77,7 +77,7 @@ export async function updateCategory(req: Request, res: Response) {
                 if(!dataCheck.ok) return res.status(500).json({ok: false, message: dataCheck.message});
                 if(dataCheck.result[0][0] != null) return res.status(406).json({ok: false, message: 'La categoría ya existe!'});
 
-                const updateQuery = `UPDATE environment SET name="${category.name}", state = "${category.state}" WHERE environment_id = "${categoryID}"`;    
+                const updateQuery = `UPDATE category SET name="${category.name}", state = "${category.state}" WHERE category_id = "${categoryID}"`;    
 
                 return await query(updateQuery).then(async dataUpdate => {
                     if(!dataUpdate.ok) return res.status(dataUpdate.status).json({ok: false, message: dataUpdate.message});    
