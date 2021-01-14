@@ -47,10 +47,10 @@ export class App {
     routes() {
         this.app.use(IndexRoutes);
         this.app.use('/auth', AuthRoutes);
-        this.app.use('/store', tokenValidation, StoreRoutes);
-        this.app.use('/category', tokenValidation, CategoryRoutes);
-        this.app.use('/commodity', tokenValidation, CommodityRoutes);
-        this.app.use('/provider', tokenValidation, ProviderRoutes);
-        this.app.use('/environment', tokenValidation, EnvironmentRoutes);
+        this.app.use('/store', StoreRoutes);
+        this.app.use('/category', CategoryRoutes);
+        this.app.use('/commodity', CommodityRoutes);
+        this.app.use('/provider', ProviderRoutes);
+        this.app.use('/environment', EnvironmentRoutes);
     }
 }

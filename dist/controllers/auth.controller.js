@@ -63,7 +63,7 @@ function signIn(req, res) {
                     }
                     queryGet = "SELECT * FROM employee WHERE username = \"" + body.username + "\"";
                     return [4 /*yield*/, query_1.query(queryGet).then(function (data) { return __awaiter(_this, void 0, void 0, function () {
-                            var employeeDB_1, compare, token_1, e_1;
+                            var employeeDB_1, compare, token_1, expiresIn_1, e_1;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
                                     case 0:
@@ -84,6 +84,7 @@ function signIn(req, res) {
                                         }
                                         delete employeeDB_1.password;
                                         token_1 = jsonwebtoken_1.default.sign({ user: employeeDB_1 }, process.env.TOKEN_SECRET, { expiresIn: process.env.TOKEN_EXPIRATION });
+                                        expiresIn_1 = Number(process.env.TOKEN_EXPIRATION);
                                         return [2 /*return*/, token_controller_1.updateNewToken(employeeDB_1, token_1).then(function (data) {
                                                 if (!data.ok)
                                                     return res.status(400).json({ ok: false, message: data.message });
@@ -92,7 +93,7 @@ function signIn(req, res) {
                                                     message: 'Inicio de sesión correcto!',
                                                     user: employeeDB_1,
                                                     token: token_1,
-                                                    expires_in: process.env.TOKEN_EXPIRATION,
+                                                    expires_in: expiresIn_1,
                                                     date: moment_1.default().format('YYYY-MM-DD HH:mm:ss')
                                                 });
                                             })];

@@ -11,8 +11,8 @@ export async function getCategories(req: Request, res: Response){
     if(Number.isNaN(offset) || Number.isNaN(state)) return res.status(404).json({ok: false, message: `La variable 'offset' y 'state' son obligatorio!`});
 
     try {
-        const getQuery = `SELECT * FROM category WHERE state = ${state} ORDER BY category_id DESC LIMIT 10 OFFSET ${offset}`;
-
+        const getQuery = `SELECT * FROM category WHERE state = ${state}`;
+        
         return await query(getQuery).then(data => {
             if(!data.ok) return res.status(data.status).json({ok: false, message: data.message})
             return res.status(data.status).json({ok: true, message: data.message, result: data.result[0]});

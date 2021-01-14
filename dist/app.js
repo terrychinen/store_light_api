@@ -50,7 +50,6 @@ var category_routes_1 = __importDefault(require("./routes/category.routes"));
 var provider_routes_1 = __importDefault(require("./routes/provider.routes"));
 var commodity_routes_1 = __importDefault(require("./routes/commodity.routes"));
 var environment_routes_1 = __importDefault(require("./routes/environment.routes"));
-var authentication_1 = require("./middlewares/authentication");
 var App = /** @class */ (function () {
     function App(port) {
         this.app = express_1.default();
@@ -84,11 +83,11 @@ var App = /** @class */ (function () {
     App.prototype.routes = function () {
         this.app.use(index_routes_1.default);
         this.app.use('/auth', auth_routes_1.default);
-        this.app.use('/store', authentication_1.tokenValidation, store_routes_1.default);
-        this.app.use('/category', authentication_1.tokenValidation, category_routes_1.default);
-        this.app.use('/commodity', authentication_1.tokenValidation, commodity_routes_1.default);
-        this.app.use('/provider', authentication_1.tokenValidation, provider_routes_1.default);
-        this.app.use('/environment', authentication_1.tokenValidation, environment_routes_1.default);
+        this.app.use('/store', store_routes_1.default);
+        this.app.use('/category', category_routes_1.default);
+        this.app.use('/commodity', commodity_routes_1.default);
+        this.app.use('/provider', provider_routes_1.default);
+        this.app.use('/environment', environment_routes_1.default);
     };
     return App;
 }());

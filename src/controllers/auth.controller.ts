@@ -38,6 +38,8 @@ export async function signIn(req: Request, res: Response) {
             delete employeeDB.password;
     
             let token = jsonWebToken.sign({user: employeeDB}, process.env.TOKEN_SECRET, {expiresIn: process.env.TOKEN_EXPIRATION}); 
+
+            let expiresIn = Number(process.env.TOKEN_EXPIRATION);
     
             return updateNewToken(employeeDB, token).then(data => {
                 if(!data.ok) return res.status(400).json({ok: false, message: data.message})
@@ -46,7 +48,7 @@ export async function signIn(req: Request, res: Response) {
                     message: 'Inicio de sesión correcto!',
                     user: employeeDB,
                     token,
-                    expires_in: process.env.TOKEN_EXPIRATION,
+                    expires_in: expiresIn,
                     date: moment().format('YYYY-MM-DD HH:mm:ss')
                 });
             });   

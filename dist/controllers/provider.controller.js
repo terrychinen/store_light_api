@@ -52,7 +52,7 @@ function getProviders(req, res) {
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
-                    getQuery = "SELECT * FROM provider WHERE state = " + state + " ORDER BY provider_id DESC LIMIT 10 OFFSET " + offset;
+                    getQuery = "SELECT * FROM provider WHERE state = " + state;
                     return [4 /*yield*/, query_1.query(getQuery).then(function (data) {
                             if (!data.ok)
                                 return res.status(data.status).json({ ok: false, message: data.message });
