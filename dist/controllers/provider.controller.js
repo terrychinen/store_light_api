@@ -71,20 +71,23 @@ exports.getProviders = getProviders;
 //================== CREAR UN PROVEEDOR ==================//
 function createProvider(req, res) {
     return __awaiter(this, void 0, void 0, function () {
-        var provider, providerName, queryCheck, error_2;
+        var provider, providerName, providerAddress, queryCheck, error_2;
         var _this = this;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
                     provider = req.body;
-                    if (provider.name == null || Number.isNaN(provider.state))
-                        return [2 /*return*/, res.status(404).json({ ok: false, message: "La variable 'name' y 'state' son obligatorio!" })];
+                    if (provider.name == null || provider.address == null
+                        || provider.ruc == null || provider.phone == null || Number.isNaN(provider.state))
+                        return [2 /*return*/, res.status(404).json({ ok: false, message: "Las variables 'name', 'address', 'ruc' y 'state' son obligatorio!" })];
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
                     providerName = provider.name;
+                    providerAddress = provider.address;
                     provider.name = providerName.charAt(0).toUpperCase() + providerName.slice(1);
-                    queryCheck = "SELECT * FROM provider WHERE name = \"" + provider.name + "\"";
+                    provider.address = providerAddress.charAt(0).toUpperCase() + providerAddress.slice(1);
+                    queryCheck = "SELECT * FROM provider WHERE name = \"" + provider.name + "\" AND address = \"" + provider.address + "\"";
                     return [4 /*yield*/, query_1.query(queryCheck).then(function (dataCheck) { return __awaiter(_this, void 0, void 0, function () {
                             var insertQuery;
                             return __generator(this, function (_a) {
@@ -93,7 +96,7 @@ function createProvider(req, res) {
                                         if (dataCheck.result[0][0] != null) {
                                             return [2 /*return*/, res.status(400).json({ ok: false, message: 'El proveedor ya existe!' })];
                                         }
-                                        insertQuery = "INSERT INTO provider (name, state) VALUES (\"" + provider.name + "\", \"" + provider.state + "\")";
+                                        insertQuery = "INSERT INTO provider (name, address, ruc, phone, state) VALUES (\"" + provider.name + "\", \"" + provider.address + "\", \"" + provider.ruc + "\", \"" + provider.phone + "\", \"" + provider.state + "\")";
                                         return [4 /*yield*/, query_1.query(insertQuery).then(function (data) {
                                                 if (!data.ok)
                                                     return res.status(data.status).json({ ok: false, message: data.message });

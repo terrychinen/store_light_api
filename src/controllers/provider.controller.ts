@@ -29,17 +29,22 @@ export async function getProviders(req: Request, res: Response){
 export async function createProvider(req: Request, res: Response) {
     const provider: ProviderModel = req.body;
 
-    if(provider.name == null || Number.isNaN(provider.state)) return res.status(404).json({ok: false, message: `La variable 'name' y 'state' son obligatorio!`});
+    if(provider.name == null || provider.address == null 
+         || provider.ruc == null || provider.phone == null || Number.isNaN(provider.state)) 
+                return res.status(404).json({ok: false, message: `Las variables 'name', 'address', 'ruc' y 'state' son obligatorio!`});
 
     try {
         const providerName = provider.name;
+        const providerAddress = provider.address;
+
         provider.name = providerName.charAt(0).toUpperCase() + providerName.slice(1);
+        provider.address = providerAddress.charAt(0).toUpperCase() + providerAddress.slice(1);
     
-        const queryCheck = `SELECT * FROM provider WHERE name = "${provider.name}"`;
+        const queryCheck = `SELECT * FROM provider WHERE name = "${provider.name}" AND address = "${provider.address}"`;
        
         return await query(queryCheck).then(async dataCheck => {
             if(dataCheck.result[0][0] != null) {return res.status(400).json({ok: false, message: 'El proveedor ya existe!'});}
-            const insertQuery = `INSERT INTO provider (name, state) VALUES ("${provider.name}", "${provider.state}")`;
+            const insertQuery = `INSERT INTO provider (name, address, ruc, phone, state) VALUES ("${provider.name}", "${provider.address}", "${provider.ruc}", "${provider.phone}", "${provider.state}")`;
     
             return await query(insertQuery).then(data => {
                 if(!data.ok) return res.status(data.status).json({ok: false, message: data.message})
