@@ -59,7 +59,7 @@ export async function updateCategory(req: Request, res: Response) {
     const category: CategoryModel = req.body;
     const categoryID = req.params.category_id;
 
-    if(category.name == null || Number.isNaN(category.state)) return res.status(404).json({ok: false, message: `La variable 'environment_id', 'name' y 'state' son obligatorio!`});
+    if(category.name == null || Number.isNaN(category.category_id) || Number.isNaN(category.state)) return res.status(404).json({ok: false, message: `La variable 'category_id', 'name' y 'state' son obligatorio!`});
 
     try {
         const categoryName = category.name;

@@ -11,7 +11,8 @@ export async function getCommodities(req: Request, res: Response){
     if(Number.isNaN(offset) || Number.isNaN(state)) return res.status(404).json({ok: false, message: `La variable 'offset' y 'state' son obligatorio!`});
 
     try {
-        const getQuery = `SELECT * FROM commodity WHERE state = ${state} ORDER BY commodity_id DESC LIMIT 10 OFFSET ${offset}`;
+        const getQuery = `SELECT comm.commodity_id, comm.category_id, (SELECT c.name FROM category c WHERE c.category_id = comm.category_id)category_name, 
+              comm.name, comm.state  FROM commodity comm WHERE state = ${state}`;
 
         return await query(getQuery).then(data => {
             if(!data.ok) return res.status(data.status).json({ok: false, message: data.message})
@@ -39,7 +40,7 @@ export async function createCommodity(req: Request, res: Response) {
        
         return await query(queryCheck).then(async dataCheck => {
             if(dataCheck.result[0][0] != null) {return res.status(400).json({ok: false, message: 'La mercancía ya existe!'});}
-            const insertQuery = `INSERT INTO commodity (name, state) VALUES ("${commodity.name}", "${commodity.state}")`;
+            const insertQuery = `INSERT INTO commodity (name, category_id, state) VALUES ("${commodity.name}", "${commodity.category_id}", "${commodity.state}")`;
     
             return await query(insertQuery).then(data => {
                 if(!data.ok) return res.status(data.status).json({ok: false, message: data.message})
@@ -71,13 +72,13 @@ export async function updateCommodity(req: Request, res: Response) {
             if(!dataCheckId.ok) return res.status(500).json({ok: false, message: dataCheckId.message});
             if(dataCheckId.result[0][0] == null) return res.status(400).json({ok: false, message: `La mercancía con el id ${commodityID} no existe!`});
 
-            const queryCheck = `SELECT * FROM commodity WHERE name = "${commodity.name}"`;
+            const queryCheck = `SELECT * FROM commodity WHERE name = "${commodity.name}" AND category_id = "${commodity.category_id}"`;
 
             return await query(queryCheck).then(async dataCheck => {
                 if(!dataCheck.ok) return res.status(500).json({ok: false, message: dataCheck.message});
                 if(dataCheck.result[0][0] != null) return res.status(406).json({ok: false, message: 'La mercancía ya existe!'});
 
-                const updateQuery = `UPDATE commodity SET name="${commodity.name}", category_id="${commodity.category_id}" AND state="${commodity.state}" WHERE commodity_id = "${commodityID}"`;    
+                const updateQuery = `UPDATE commodity SET name="${commodity.name}", category_id="${commodity.category_id}", state="${commodity.state}" WHERE commodity_id = "${commodityID}"`;    
 
                 return await query(updateQuery).then(async dataUpdate => {
                     if(!dataUpdate.ok) return res.status(dataUpdate.status).json({ok: false, message: dataUpdate.message});    

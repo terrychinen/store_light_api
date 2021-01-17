@@ -123,8 +123,8 @@ function updateCategory(req, res) {
                 case 0:
                     category = req.body;
                     categoryID = req.params.category_id;
-                    if (category.name == null || Number.isNaN(category.state))
-                        return [2 /*return*/, res.status(404).json({ ok: false, message: "La variable 'environment_id', 'name' y 'state' son obligatorio!" })];
+                    if (category.name == null || Number.isNaN(category.category_id) || Number.isNaN(category.state))
+                        return [2 /*return*/, res.status(404).json({ ok: false, message: "La variable 'category_id', 'name' y 'state' son obligatorio!" })];
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);

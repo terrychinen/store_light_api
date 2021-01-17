@@ -43,6 +43,7 @@ exports.App = void 0;
 var express_1 = __importDefault(require("express"));
 var morgan_1 = __importDefault(require("morgan"));
 var dotenv_1 = __importDefault(require("dotenv"));
+var body_parser_1 = __importDefault(require("body-parser"));
 var index_routes_1 = __importDefault(require("./routes/index.routes"));
 var auth_routes_1 = __importDefault(require("./routes/auth.routes"));
 var store_routes_1 = __importDefault(require("./routes/store.routes"));
@@ -50,6 +51,8 @@ var category_routes_1 = __importDefault(require("./routes/category.routes"));
 var provider_routes_1 = __importDefault(require("./routes/provider.routes"));
 var commodity_routes_1 = __importDefault(require("./routes/commodity.routes"));
 var environment_routes_1 = __importDefault(require("./routes/environment.routes"));
+var employee_routes_1 = __importDefault(require("./routes/employee.routes"));
+var store_commodity_routes_1 = __importDefault(require("./routes/store_commodity.routes"));
 var App = /** @class */ (function () {
     function App(port) {
         this.app = express_1.default();
@@ -64,6 +67,7 @@ var App = /** @class */ (function () {
     };
     App.prototype.middlewares = function () {
         this.app.use(morgan_1.default('dev'));
+        this.app.use(body_parser_1.default.json());
         this.app.use(express_1.default.urlencoded({ extended: false }));
         this.app.use(express_1.default.json());
     };
@@ -88,6 +92,8 @@ var App = /** @class */ (function () {
         this.app.use('/commodity', commodity_routes_1.default);
         this.app.use('/provider', provider_routes_1.default);
         this.app.use('/environment', environment_routes_1.default);
+        this.app.use('/employee', employee_routes_1.default);
+        this.app.use('/store_commodity', store_commodity_routes_1.default);
     };
     return App;
 }());

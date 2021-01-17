@@ -35,11 +35,15 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.searchProvider = exports.deleteProvider = exports.updateProvider = exports.createProvider = exports.getProviders = void 0;
+exports.updateEmployee = exports.createEmployee = exports.getEmployees = void 0;
+var bcrypt_1 = __importDefault(require("bcrypt"));
 var query_1 = require("../query/query");
-//================== OBTENER TODOS LOS PROVEEDORES ==================//
-function getProviders(req, res) {
+//================== OBTENER TODAS LOS EMPLEADOS ==================//
+function getEmployees(req, res) {
     return __awaiter(this, void 0, void 0, function () {
         var offset, state, getQuery, error_1;
         return __generator(this, function (_a) {
@@ -52,7 +56,7 @@ function getProviders(req, res) {
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
-                    getQuery = "SELECT * FROM provider WHERE state = " + state;
+                    getQuery = "SELECT employee_id, token_id, name, username, state FROM employee WHERE state = " + state;
                     return [4 /*yield*/, query_1.query(getQuery).then(function (data) {
                             if (!data.ok)
                                 return res.status(data.status).json({ ok: false, message: data.message });
@@ -67,41 +71,42 @@ function getProviders(req, res) {
         });
     });
 }
-exports.getProviders = getProviders;
-//================== CREAR UN PROVEEDOR ==================//
-function createProvider(req, res) {
+exports.getEmployees = getEmployees;
+//================== CREAR UN EMPLEADO ==================//
+function createEmployee(req, res) {
     return __awaiter(this, void 0, void 0, function () {
-        var provider, providerName, providerAddress, queryCheck, error_2;
+        var employee, employeeName, queryCheck, error_2;
         var _this = this;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    provider = req.body;
-                    if (provider.name == null || provider.name == '' || Number.isNaN(provider.state))
-                        return [2 /*return*/, res.status(404).json({ ok: false, message: "Las variables 'name' y 'state' son obligatorio!" })];
+                    employee = req.body;
+                    if (employee.name == null || Number.isNaN(employee.state))
+                        return [2 /*return*/, res.status(404).json({ ok: false, message: "La variable 'name' y 'state' son obligatorio!" })];
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
-                    providerName = provider.name;
-                    providerAddress = provider.address;
-                    provider.name = providerName.charAt(0).toUpperCase() + providerName.slice(1);
-                    provider.address = providerAddress.charAt(0).toUpperCase() + providerAddress.slice(1);
-                    queryCheck = "SELECT * FROM provider WHERE name = \"" + provider.name + "\" \n        AND address = \"" + provider.address + "\" AND phone = \"" + provider.phone + "\" AND ruc = \"" + provider.ruc + "\"";
+                    employeeName = employee.name;
+                    employee.name = employeeName.charAt(0).toUpperCase() + employeeName.slice(1);
+                    queryCheck = "SELECT * FROM employee WHERE username = \"" + employee.username + "\"";
                     return [4 /*yield*/, query_1.query(queryCheck).then(function (dataCheck) { return __awaiter(_this, void 0, void 0, function () {
-                            var insertQuery;
+                            var password, insertQuery;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
                                     case 0:
                                         if (dataCheck.result[0][0] != null) {
-                                            return [2 /*return*/, res.status(400).json({ ok: false, message: 'El proveedor ya existe!' })];
+                                            return [2 /*return*/, res.status(400).json({ ok: false, message: 'Ya existe un empleado con ese usuario!' })];
                                         }
-                                        insertQuery = "INSERT INTO provider (name, address, ruc, phone, state) VALUES (\"" + provider.name + "\", \"" + provider.address + "\", \"" + provider.ruc + "\", \"" + provider.phone + "\", \"" + provider.state + "\")";
+                                        return [4 /*yield*/, bcrypt_1.default.hashSync(employee.password, 10)];
+                                    case 1:
+                                        password = _a.sent();
+                                        insertQuery = "INSERT INTO employee (name, username, password state) VALUES (\"" + employee.name + "\", \"" + employee.username + "\", \"" + password + "\", \"" + employee.state + "\")";
                                         return [4 /*yield*/, query_1.query(insertQuery).then(function (data) {
                                                 if (!data.ok)
                                                     return res.status(data.status).json({ ok: false, message: data.message });
-                                                return res.status(data.status).json({ ok: true, message: 'Proveedor creado correctamente' });
+                                                return res.status(data.status).json({ ok: true, message: 'Empleado creado correctamente' });
                                             })];
-                                    case 1: return [2 /*return*/, _a.sent()];
+                                    case 2: return [2 /*return*/, _a.sent()];
                                 }
                             });
                         }); })];
@@ -114,25 +119,25 @@ function createProvider(req, res) {
         });
     });
 }
-exports.createProvider = createProvider;
-//================== ACTUALIZAR UN PROVEEDOR ==================//
-function updateProvider(req, res) {
+exports.createEmployee = createEmployee;
+//================== ACTUALIZAR UN EMPLEADO ==================//
+function updateEmployee(req, res) {
     return __awaiter(this, void 0, void 0, function () {
-        var provider, providerID, providerName, queryCheckId, error_3;
+        var employee, employeeID, employeeName, queryCheckId, error_3;
         var _this = this;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    provider = req.body;
-                    providerID = req.params.provider_id;
-                    if (provider.name == null || provider.name == '' || Number.isNaN(provider.state))
-                        return [2 /*return*/, res.status(404).json({ ok: false, message: "Las variables 'name' y 'state' son obligatorio!" })];
+                    employee = req.body;
+                    employeeID = req.params.employee_id;
+                    if (employee.name == null || Number.isNaN(employee.employee_id) || Number.isNaN(employee.state))
+                        return [2 /*return*/, res.status(404).json({ ok: false, message: "La variable 'employee_id', 'name' y 'state' son obligatorio!" })];
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
-                    providerName = provider.name;
-                    provider.name = providerName.charAt(0).toUpperCase() + providerName.slice(1);
-                    queryCheckId = "SELECT * FROM provider WHERE provider_id = \"" + providerID + "\"";
+                    employeeName = employee.name;
+                    employee.name = employeeName.charAt(0).toUpperCase() + employeeName.slice(1);
+                    queryCheckId = "SELECT * FROM employee WHERE employee_id = \"" + employeeID + "\"";
                     return [4 /*yield*/, query_1.query(queryCheckId).then(function (dataCheckId) { return __awaiter(_this, void 0, void 0, function () {
                             var queryCheck;
                             var _this = this;
@@ -142,8 +147,8 @@ function updateProvider(req, res) {
                                         if (!dataCheckId.ok)
                                             return [2 /*return*/, res.status(500).json({ ok: false, message: dataCheckId.message })];
                                         if (dataCheckId.result[0][0] == null)
-                                            return [2 /*return*/, res.status(400).json({ ok: false, message: "El proveedor con el id " + providerID + " no existe!" })];
-                                        queryCheck = "SELECT * FROM provider WHERE name = \"" + provider.name + "\" \n                    AND address = \"" + provider.address + "\" AND phone = \"" + provider.phone + "\" AND ruc = \"" + provider.ruc + "\"";
+                                            return [2 /*return*/, res.status(400).json({ ok: false, message: "El empleado con el id " + employeeID + " no existe!" })];
+                                        queryCheck = "SELECT * FROM employee WHERE username = \"" + employee.username + "\"";
                                         return [4 /*yield*/, query_1.query(queryCheck).then(function (dataCheck) { return __awaiter(_this, void 0, void 0, function () {
                                                 var updateQuery;
                                                 var _this = this;
@@ -153,13 +158,13 @@ function updateProvider(req, res) {
                                                             if (!dataCheck.ok)
                                                                 return [2 /*return*/, res.status(500).json({ ok: false, message: dataCheck.message })];
                                                             if (dataCheck.result[0][0] != null)
-                                                                return [2 /*return*/, res.status(406).json({ ok: false, message: 'El proveedor ya existe!' })];
-                                                            updateQuery = "UPDATE provider SET name=\"" + provider.name + "\", ruc=\"" + provider.ruc + "\",\n                        address=\"" + provider.address + "\", phone=\"" + provider.phone + "\", state = \"" + provider.state + "\" WHERE provider_id = \"" + providerID + "\"";
+                                                                return [2 /*return*/, res.status(406).json({ ok: false, message: 'Ya existe un empleado con ese usuario!' })];
+                                                            updateQuery = "UPDATE employee SET name=\"" + employee.name + "\", username=\"" + employee.name + "\", password=\"" + employee.password + "\", state = \"" + employee.state + "\" WHERE employee_id = \"" + employeeID + "\"";
                                                             return [4 /*yield*/, query_1.query(updateQuery).then(function (dataUpdate) { return __awaiter(_this, void 0, void 0, function () {
                                                                     return __generator(this, function (_a) {
                                                                         if (!dataUpdate.ok)
                                                                             return [2 /*return*/, res.status(dataUpdate.status).json({ ok: false, message: dataUpdate.message })];
-                                                                        return [2 /*return*/, res.status(dataUpdate.status).json({ ok: true, message: 'El proveedor se actualizó correctamente' })];
+                                                                        return [2 /*return*/, res.status(dataUpdate.status).json({ ok: true, message: 'El empleado se actualizó correctamente' })];
                                                                     });
                                                                 }); })];
                                                         case 1: return [2 /*return*/, _a.sent()];
@@ -179,74 +184,4 @@ function updateProvider(req, res) {
         });
     });
 }
-exports.updateProvider = updateProvider;
-//================== ELIMINAR UN PROVEEDOR POR SU ID ==================//
-function deleteProvider(req, res) {
-    return __awaiter(this, void 0, void 0, function () {
-        var providerID, checkIdQuery, error_4;
-        var _this = this;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    providerID = req.params.provider_id;
-                    checkIdQuery = "SELECT * FROM provider WHERE provider_id = " + providerID;
-                    _a.label = 1;
-                case 1:
-                    _a.trys.push([1, 3, , 4]);
-                    return [4 /*yield*/, query_1.query(checkIdQuery).then(function (dataCheckId) { return __awaiter(_this, void 0, void 0, function () {
-                            var deleteQuery;
-                            return __generator(this, function (_a) {
-                                switch (_a.label) {
-                                    case 0:
-                                        if (dataCheckId.result[0][0] == null)
-                                            return [2 /*return*/, res.status(400).json({ ok: false, message: "El proveedor con el id " + providerID + " no existe!" })];
-                                        deleteQuery = "DELETE FROM provider WHERE provider_id = " + providerID;
-                                        return [4 /*yield*/, query_1.query(deleteQuery).then(function (dataDelete) {
-                                                if (!dataDelete.ok)
-                                                    return res.status(dataDelete.status).json({ ok: false, message: dataDelete.message });
-                                                return res.status(dataDelete.status).json({ ok: true, message: 'El proveedor se eliminó correctamente' });
-                                            })];
-                                    case 1: return [2 /*return*/, _a.sent()];
-                                }
-                            });
-                        }); })];
-                case 2: return [2 /*return*/, _a.sent()];
-                case 3:
-                    error_4 = _a.sent();
-                    return [2 /*return*/, res.status(500).json({ ok: false, message: error_4 })];
-                case 4: return [2 /*return*/];
-            }
-        });
-    });
-}
-exports.deleteProvider = deleteProvider;
-//================== BUSCAR PROVEEDOR POR SU NOMBRE  ==================//
-function searchProvider(req, res) {
-    return __awaiter(this, void 0, void 0, function () {
-        var search, state, querySearch, error_5;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    search = req.body.search;
-                    state = Number(req.body.state);
-                    if (search == null || Number.isNaN(state))
-                        return [2 /*return*/, res.status(404).json({ ok: false, message: "La variable 'search' y 'state' son obligatorio!" })];
-                    _a.label = 1;
-                case 1:
-                    _a.trys.push([1, 3, , 4]);
-                    querySearch = "SELECT * FROM provider WHERE name LIKE \"%" + search + "%\" AND state = " + state + " LIMIT 10";
-                    return [4 /*yield*/, query_1.query(querySearch).then(function (data) {
-                            if (!data.ok)
-                                return res.status(data.status).json({ ok: false, message: data.message });
-                            return res.status(data.status).json({ ok: true, message: data.message, result: data.result[0] });
-                        })];
-                case 2: return [2 /*return*/, _a.sent()];
-                case 3:
-                    error_5 = _a.sent();
-                    return [2 /*return*/, res.status(500).json({ ok: false, message: error_5 })];
-                case 4: return [2 /*return*/];
-            }
-        });
-    });
-}
-exports.searchProvider = searchProvider;
+exports.updateEmployee = updateEmployee;

@@ -52,7 +52,7 @@ function getCommodities(req, res) {
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
-                    getQuery = "SELECT * FROM commodity WHERE state = " + state + " ORDER BY commodity_id DESC LIMIT 10 OFFSET " + offset;
+                    getQuery = "SELECT comm.commodity_id, comm.category_id, (SELECT c.name FROM category c WHERE c.category_id = comm.category_id)category_name, \n              comm.name, comm.state  FROM commodity comm WHERE state = " + state;
                     return [4 /*yield*/, query_1.query(getQuery).then(function (data) {
                             if (!data.ok)
                                 return res.status(data.status).json({ ok: false, message: data.message });
@@ -93,7 +93,7 @@ function createCommodity(req, res) {
                                         if (dataCheck.result[0][0] != null) {
                                             return [2 /*return*/, res.status(400).json({ ok: false, message: 'La mercancía ya existe!' })];
                                         }
-                                        insertQuery = "INSERT INTO commodity (name, state) VALUES (\"" + commodity.name + "\", \"" + commodity.state + "\")";
+                                        insertQuery = "INSERT INTO commodity (name, category_id, state) VALUES (\"" + commodity.name + "\", \"" + commodity.category_id + "\", \"" + commodity.state + "\")";
                                         return [4 /*yield*/, query_1.query(insertQuery).then(function (data) {
                                                 if (!data.ok)
                                                     return res.status(data.status).json({ ok: false, message: data.message });
@@ -141,7 +141,7 @@ function updateCommodity(req, res) {
                                             return [2 /*return*/, res.status(500).json({ ok: false, message: dataCheckId.message })];
                                         if (dataCheckId.result[0][0] == null)
                                             return [2 /*return*/, res.status(400).json({ ok: false, message: "La mercanc\u00EDa con el id " + commodityID + " no existe!" })];
-                                        queryCheck = "SELECT * FROM commodity WHERE name = \"" + commodity.name + "\"";
+                                        queryCheck = "SELECT * FROM commodity WHERE name = \"" + commodity.name + "\" AND category_id = \"" + commodity.category_id + "\"";
                                         return [4 /*yield*/, query_1.query(queryCheck).then(function (dataCheck) { return __awaiter(_this, void 0, void 0, function () {
                                                 var updateQuery;
                                                 var _this = this;
@@ -152,7 +152,7 @@ function updateCommodity(req, res) {
                                                                 return [2 /*return*/, res.status(500).json({ ok: false, message: dataCheck.message })];
                                                             if (dataCheck.result[0][0] != null)
                                                                 return [2 /*return*/, res.status(406).json({ ok: false, message: 'La mercancía ya existe!' })];
-                                                            updateQuery = "UPDATE commodity SET name=\"" + commodity.name + "\", category_id=\"" + commodity.category_id + "\" AND state=\"" + commodity.state + "\" WHERE commodity_id = \"" + commodityID + "\"";
+                                                            updateQuery = "UPDATE commodity SET name=\"" + commodity.name + "\", category_id=\"" + commodity.category_id + "\", state=\"" + commodity.state + "\" WHERE commodity_id = \"" + commodityID + "\"";
                                                             return [4 /*yield*/, query_1.query(updateQuery).then(function (dataUpdate) { return __awaiter(_this, void 0, void 0, function () {
                                                                     return __generator(this, function (_a) {
                                                                         if (!dataUpdate.ok)

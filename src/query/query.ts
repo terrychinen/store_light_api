@@ -6,7 +6,7 @@ export async function query(queryString: string) {
         const conn = await connect();
         const query = await conn.query(queryString);
 
-        conn.end();
+        await conn.end();
 
         if(!query) return ({ok: false, status: 400, message: 'Query error', result: []});
         return ({

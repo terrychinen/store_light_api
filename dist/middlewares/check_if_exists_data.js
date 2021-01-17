@@ -36,38 +36,28 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.query = void 0;
-var database_1 = require("../database");
-function query(queryString) {
+exports.checkIfCommodityExists = void 0;
+var query_1 = require("../query/query");
+function checkIfCommodityExists(res, req, next, commodityID) {
     return __awaiter(this, void 0, void 0, function () {
-        var conn, query_1, e_1;
+        var queryCheckCommodityID;
+        var _this = this;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    _a.trys.push([0, 4, , 5]);
-                    return [4 /*yield*/, database_1.connect()];
-                case 1:
-                    conn = _a.sent();
-                    return [4 /*yield*/, conn.query(queryString)];
-                case 2:
-                    query_1 = _a.sent();
-                    return [4 /*yield*/, conn.end()];
-                case 3:
-                    _a.sent();
-                    if (!query_1)
-                        return [2 /*return*/, ({ ok: false, status: 400, message: 'Query error', result: [] })];
-                    return [2 /*return*/, ({
-                            ok: true,
-                            status: 200,
-                            message: 'Query successful',
-                            result: query_1
-                        })];
-                case 4:
-                    e_1 = _a.sent();
-                    return [2 /*return*/, ({ ok: false, status: 500, message: e_1.toString(), result: [] })];
-                case 5: return [2 /*return*/];
+                    queryCheckCommodityID = "SELECT * FROM commodity WHERE commodity_id = \"" + commodityID + "\"";
+                    return [4 /*yield*/, query_1.query(queryCheckCommodityID).then(function (dataCheck) { return __awaiter(_this, void 0, void 0, function () {
+                            return __generator(this, function (_a) {
+                                if (dataCheck.result[0][0] == null) {
+                                    return [2 /*return*/, res.status(400).json({ ok: false, message: 'No existe la mercancía' })];
+                                }
+                                next();
+                                return [2 /*return*/];
+                            });
+                        }); })];
+                case 1: return [2 /*return*/, _a.sent()];
             }
         });
     });
 }
-exports.query = query;
+exports.checkIfCommodityExists = checkIfCommodityExists;
