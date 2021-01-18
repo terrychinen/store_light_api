@@ -13,7 +13,8 @@ export async function getStoresCommodities(req: Request, res: Response){
     try {
         const getQuery = `SELECT sc.store_id, (SELECT name FROM store WHERE store_id = sc.store_id)store_name, 
         sc.commodity_id, (SELECT name FROM commodity WHERE commodity_id = sc.commodity_id)commodity_name, 
-        sc.stock, sc.state FROM store_commodity sc WHERE sc.state = ${state}`;
+        sc.stock, (SELECT SUM(stock) FROM store_commodity WHERE commodity_id = sc.commodity_id)stock_total, 
+        sc.state FROM store_commodity sc WHERE sc.state = ${state}`;
         
         return await query(getQuery).then(data => {
             if(!data.ok) return res.status(data.status).json({ok: false, message: data.message})
@@ -28,7 +29,6 @@ export async function getStoresCommodities(req: Request, res: Response){
 
 
 //================== CREAR ALMACENES-MERCANCIAS ==================//
-let checkQuery: boolean = false;
 export async function createStoreCommodity(req: Request, res: Response, next: NextFunction) {
     const storeCommodityList: Array<StoreCommodityModel> = req.body.store_commodity;
 

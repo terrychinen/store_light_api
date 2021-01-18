@@ -52,7 +52,7 @@ function getStoresCommodities(req, res) {
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
-                    getQuery = "SELECT sc.store_id, (SELECT name FROM store WHERE store_id = sc.store_id)store_name, \n        sc.commodity_id, (SELECT name FROM commodity WHERE commodity_id = sc.commodity_id)commodity_name, \n        sc.stock, sc.state FROM store_commodity sc WHERE sc.state = " + state;
+                    getQuery = "SELECT sc.store_id, (SELECT name FROM store WHERE store_id = sc.store_id)store_name, \n        sc.commodity_id, (SELECT name FROM commodity WHERE commodity_id = sc.commodity_id)commodity_name, \n        sc.stock, (SELECT SUM(stock) FROM store_commodity WHERE commodity_id = sc.commodity_id)stock_total, \n        sc.state FROM store_commodity sc WHERE sc.state = " + state;
                     return [4 /*yield*/, query_1.query(getQuery).then(function (data) {
                             if (!data.ok)
                                 return res.status(data.status).json({ ok: false, message: data.message });
@@ -69,7 +69,6 @@ function getStoresCommodities(req, res) {
 }
 exports.getStoresCommodities = getStoresCommodities;
 //================== CREAR ALMACENES-MERCANCIAS ==================//
-var checkQuery = false;
 function createStoreCommodity(req, res, next) {
     return __awaiter(this, void 0, void 0, function () {
         var storeCommodityList, i, storeCommodity, checkIfCommodity_StoreExists, insertQuery, error_2;
