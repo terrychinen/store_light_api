@@ -13,6 +13,7 @@ import CommodityRoutes from './routes/commodity.routes';
 import EnvironmentRoutes from './routes/environment.routes';
 import EmployeeRoutes from './routes/employee.routes';
 import StoreCommodityRoutes from './routes/store_commodity.routes';
+import PurchaseOrderRoutes from './routes/purchase_order.routes';
 
 import { tokenValidation } from './middlewares/authentication';
 
@@ -56,6 +57,7 @@ export class App {
         this.app.use('/provider', ProviderRoutes);
         this.app.use('/environment', EnvironmentRoutes);
         this.app.use('/employee', EmployeeRoutes);
-        this.app.use('/store_commodity', StoreCommodityRoutes);
+        this.app.use('/store_commodity', StoreCommodityRoutes);         
+        this.app.use('/purchase_order', PurchaseOrderRoutes);         
     }
 }

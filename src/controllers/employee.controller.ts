@@ -12,7 +12,7 @@ export async function getEmployees(req: Request, res: Response){
     if(Number.isNaN(offset) || Number.isNaN(state)) return res.status(404).json({ok: false, message: `La variable 'offset' y 'state' son obligatorio!`});
 
     try {
-        const getQuery = `SELECT employee_id, token_id, name, username, state FROM employee WHERE state = ${state}`;
+        const getQuery = `SELECT employee_id, name, username, state FROM employee WHERE state = ${state}`;
         
         return await query(getQuery).then(data => {
             if(!data.ok) return res.status(data.status).json({ok: false, message: data.message})
@@ -42,7 +42,7 @@ export async function createEmployee(req: Request, res: Response) {
             if(dataCheck.result[0][0] != null) {return res.status(400).json({ok: false, message: 'Ya existe un empleado con ese usuario!'});}
 
             let password = await bcrypt.hashSync(employee.password, 10);
-            const insertQuery = `INSERT INTO employee (name, username, password state) VALUES ("${employee.name}", "${employee.username}", "${password}", "${employee.state}")`;
+            const insertQuery = `INSERT INTO employee (name, username, password, state) VALUES ("${employee.name}", "${employee.username}", "${password}", "${employee.state}")`;
     
             return await query(insertQuery).then(data => {
                 if(!data.ok) return res.status(data.status).json({ok: false, message: data.message})

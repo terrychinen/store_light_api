@@ -52,7 +52,7 @@ function getCommodities(req, res) {
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
-                    getQuery = "SELECT comm.commodity_id, comm.category_id, (SELECT c.name FROM category c WHERE c.category_id = comm.category_id)category_name, \n              comm.name, comm.state  FROM commodity comm WHERE state = " + state;
+                    getQuery = "SELECT comm.commodity_id, comm.category_id, (SELECT c.name FROM category c WHERE c.category_id = comm.category_id)category_name, \n              comm.name, comm.state  FROM commodity comm WHERE state = " + state + " LIMIT 20";
                     return [4 /*yield*/, query_1.query(getQuery).then(function (data) {
                             if (!data.ok)
                                 return res.status(data.status).json({ ok: false, message: data.message });
@@ -221,18 +221,26 @@ exports.deleteCommodity = deleteCommodity;
 //================== BUSCAR MERCANCIA POR SU NOMBRE  ==================//
 function searchCommodity(req, res) {
     return __awaiter(this, void 0, void 0, function () {
-        var search, state, querySearch, error_5;
+        var search, searchBy, state, columnName, querySearch, error_5;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
                     search = req.body.search;
+                    searchBy = req.body.search_by;
                     state = Number(req.body.state);
                     if (search == null || Number.isNaN(state))
                         return [2 /*return*/, res.status(404).json({ ok: false, message: "La variable 'search' y 'state' son obligatorios!" })];
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
-                    querySearch = "SELECT * FROM commodity WHERE name LIKE \"%" + search + "%\" AND state = " + state + " LIMIT 10";
+                    columnName = '';
+                    if (searchBy == 0) {
+                        columnName = 'commodity_id';
+                    }
+                    else if (searchBy == 1) {
+                        columnName = 'name';
+                    }
+                    querySearch = "SELECT * FROM commodity WHERE " + columnName + " LIKE \"%" + search + "%\" AND state = " + state + " LIMIT 10";
                     return [4 /*yield*/, query_1.query(querySearch).then(function (data) {
                             if (!data.ok)
                                 return res.status(data.status).json({ ok: false, message: data.message });

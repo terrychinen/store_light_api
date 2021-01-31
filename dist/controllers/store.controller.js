@@ -52,7 +52,7 @@ function getStores(req, res) {
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
-                    getQuery = "SELECT * FROM store WHERE state = " + state;
+                    getQuery = "SELECT * FROM store WHERE state = " + state + " LIMIT 20";
                     return [4 /*yield*/, query_1.query(getQuery).then(function (data) {
                             if (!data.ok)
                                 return res.status(data.status).json({ ok: false, message: data.message });
@@ -130,7 +130,7 @@ function updateStore(req, res) {
                     _a.trys.push([1, 3, , 4]);
                     storeName = store.name;
                     store.name = storeName.charAt(0).toUpperCase() + storeName.slice(1);
-                    queryCheckId = "SELECT * FROM store WHERE store_id = \"" + storeID + "\"";
+                    queryCheckId = "SELECT * FROM store WHERE store_id = \"" + storeID + "\" LIMIT 20";
                     return [4 /*yield*/, query_1.query(queryCheckId).then(function (dataCheckId) { return __awaiter(_this, void 0, void 0, function () {
                             var queryCheck;
                             var _this = this;

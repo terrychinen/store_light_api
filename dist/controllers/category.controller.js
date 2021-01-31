@@ -52,7 +52,7 @@ function getCategories(req, res) {
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
-                    getQuery = "SELECT * FROM category WHERE state = " + state;
+                    getQuery = "SELECT * FROM category WHERE state = " + state + " LIMIT 20";
                     return [4 /*yield*/, query_1.query(getQuery).then(function (data) {
                             if (!data.ok)
                                 return res.status(data.status).json({ ok: false, message: data.message });
@@ -221,18 +221,26 @@ exports.deleteCategory = deleteCategory;
 //================== BUSCAR CATEGORIA POR SU NOMBRE  ==================//
 function searchCategory(req, res) {
     return __awaiter(this, void 0, void 0, function () {
-        var search, state, querySearch, error_5;
+        var search, searchBy, state, columnName, querySearch, error_5;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
                     search = req.body.search;
+                    searchBy = req.body.search_by;
                     state = Number(req.body.state);
                     if (search == null || Number.isNaN(state))
                         return [2 /*return*/, res.status(404).json({ ok: false, message: "La variable 'search' y 'state' son obligatorio!" })];
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
-                    querySearch = "SELECT * FROM category WHERE name LIKE \"%" + search + "%\" AND state = " + state + " LIMIT 10";
+                    columnName = '';
+                    if (searchBy == 0) {
+                        columnName = 'category_id';
+                    }
+                    else {
+                        columnName = 'name';
+                    }
+                    querySearch = "SELECT * FROM category WHERE " + columnName + " LIKE \"%" + search + "%\" AND state = " + state + " LIMIT 10";
                     return [4 /*yield*/, query_1.query(querySearch).then(function (data) {
                             if (!data.ok)
                                 return res.status(data.status).json({ ok: false, message: data.message });

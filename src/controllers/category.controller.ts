@@ -11,7 +11,7 @@ export async function getCategories(req: Request, res: Response){
     if(Number.isNaN(offset) || Number.isNaN(state)) return res.status(404).json({ok: false, message: `La variable 'offset' y 'state' son obligatorio!`});
 
     try {
-        const getQuery = `SELECT * FROM category WHERE state = ${state}`;
+        const getQuery = `SELECT * FROM category WHERE state = ${state} LIMIT 20`;
         
         return await query(getQuery).then(data => {
             if(!data.ok) return res.status(data.status).json({ok: false, message: data.message})
@@ -122,12 +122,21 @@ export async function deleteCategory(req: Request, res: Response) {
 //================== BUSCAR CATEGORIA POR SU NOMBRE  ==================//
 export async function searchCategory(req: Request, res: Response){
     const search = req.body.search;
+    const searchBy = req.body.search_by;
     const state = Number(req.body.state);
 
     if(search == null || Number.isNaN(state)) return res.status(404).json({ok: false, message: `La variable 'search' y 'state' son obligatorio!`});
 
-    try {
-        const querySearch = `SELECT * FROM category WHERE name LIKE "%${search}%" AND state = ${state} LIMIT 10`;
+    try {        
+        let columnName = '';
+
+        if(searchBy == 0) {
+            columnName = 'category_id';
+        }else {
+            columnName = 'name';
+        }
+
+        const querySearch = `SELECT * FROM category WHERE ${columnName} LIKE "%${search}%" AND state = ${state} LIMIT 10`;
 
         return await query(querySearch).then( data => {
             if(!data.ok) return res.status(data.status).json({ok: false, message: data.message})

@@ -11,7 +11,7 @@ export async function getStores(req: Request, res: Response){
     if(Number.isNaN(offset) || Number.isNaN(state)) return res.status(404).json({ok: false, message: `La variable 'offset' y 'state' son obligatorio!`});
 
     try {
-        const getQuery = `SELECT * FROM store WHERE state = ${state}`;
+        const getQuery = `SELECT * FROM store WHERE state = ${state} LIMIT 20`;
 
         return await query(getQuery).then(data => {
             if(!data.ok) return res.status(data.status).json({ok: false, message: data.message})
@@ -65,7 +65,7 @@ export async function updateStore(req: Request, res: Response) {
         const storeName = store.name;
         store.name = storeName.charAt(0).toUpperCase() + storeName.slice(1);
 
-        const queryCheckId = `SELECT * FROM store WHERE store_id = "${storeID}"`;
+        const queryCheckId = `SELECT * FROM store WHERE store_id = "${storeID}" LIMIT 20`;
 
         return await query(queryCheckId).then(async dataCheckId => {
             if(!dataCheckId.ok) return res.status(500).json({ok: false, message: dataCheckId.message});

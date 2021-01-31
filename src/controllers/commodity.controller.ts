@@ -12,7 +12,7 @@ export async function getCommodities(req: Request, res: Response){
 
     try {
         const getQuery = `SELECT comm.commodity_id, comm.category_id, (SELECT c.name FROM category c WHERE c.category_id = comm.category_id)category_name, 
-              comm.name, comm.state  FROM commodity comm WHERE state = ${state}`;
+              comm.name, comm.state  FROM commodity comm WHERE state = ${state} LIMIT 20`;
 
         return await query(getQuery).then(data => {
             if(!data.ok) return res.status(data.status).json({ok: false, message: data.message})
@@ -123,12 +123,22 @@ export async function deleteCommodity(req: Request, res: Response) {
 //================== BUSCAR MERCANCIA POR SU NOMBRE  ==================//
 export async function searchCommodity(req: Request, res: Response){
     const search = req.body.search;
+    const searchBy = req.body.search_by;
     const state = Number(req.body.state);
 
     if(search == null || Number.isNaN(state)) return res.status(404).json({ok: false, message: `La variable 'search' y 'state' son obligatorios!`});
 
     try {
-        const querySearch = `SELECT * FROM commodity WHERE name LIKE "%${search}%" AND state = ${state} LIMIT 10`;
+
+        let columnName = '';
+
+        if(searchBy == 0) {
+            columnName = 'commodity_id';
+        }else if(searchBy == 1) {
+            columnName = 'name';
+        }
+
+        const querySearch = `SELECT * FROM commodity WHERE ${columnName} LIKE "%${search}%" AND state = ${state} LIMIT 10`;
 
         return await query(querySearch).then( data => {
             if(!data.ok) return res.status(data.status).json({ok: false, message: data.message})

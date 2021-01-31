@@ -5,7 +5,6 @@ var store_commodity_controller_1 = require("../controllers/store_commodity.contr
 var router = express_1.Router();
 router.route('/')
     .get(store_commodity_controller_1.getStoresCommodities)
-    .post(store_commodity_controller_1.createStoreCommodity);
-// router.route('/:employee_id')
-//     .put(updateStoreCommodity);
+    .post(store_commodity_controller_1.createStoreCommodity)
+    .put(store_commodity_controller_1.updateStoreCommodity);
 exports.default = router;

@@ -36,7 +36,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createStoreCommodity = exports.getStoresCommodities = void 0;
+exports.updateStoreCommodity = exports.createStoreCommodity = exports.getStoresCommodities = void 0;
 var query_1 = require("../query/query");
 //================== OBTENER TODAS LOS ALMACENES-MERCANCIAS ==================//
 function getStoresCommodities(req, res) {
@@ -52,7 +52,7 @@ function getStoresCommodities(req, res) {
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
-                    getQuery = "SELECT sc.store_id, (SELECT name FROM store WHERE store_id = sc.store_id)store_name, \n        sc.commodity_id, (SELECT name FROM commodity WHERE commodity_id = sc.commodity_id)commodity_name, \n        sc.stock, (SELECT SUM(stock) FROM store_commodity WHERE commodity_id = sc.commodity_id)stock_total, \n        sc.state FROM store_commodity sc WHERE sc.state = " + state;
+                    getQuery = "SELECT sc.store_id, (SELECT name FROM store WHERE store_id = sc.store_id)store_name, \n        sc.commodity_id, (SELECT name FROM commodity WHERE commodity_id = sc.commodity_id)commodity_name, \n        sc.stock, (SELECT SUM(stock) FROM store_commodity WHERE commodity_id = sc.commodity_id)stock_total, \n        sc.state FROM store_commodity sc LIMIT 20";
                     return [4 /*yield*/, query_1.query(getQuery).then(function (data) {
                             if (!data.ok)
                                 return res.status(data.status).json({ ok: false, message: data.message });
@@ -71,48 +71,79 @@ exports.getStoresCommodities = getStoresCommodities;
 //================== CREAR ALMACENES-MERCANCIAS ==================//
 function createStoreCommodity(req, res, next) {
     return __awaiter(this, void 0, void 0, function () {
-        var storeCommodityList, i, storeCommodity, checkIfCommodity_StoreExists, insertQuery, error_2;
+        var storeCommodity, checkIfCommodity_StoreExists, insertQuery, error_2;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    storeCommodityList = req.body.store_commodity;
+                    storeCommodity = req.body;
                     _a.label = 1;
                 case 1:
-                    _a.trys.push([1, 9, , 10]);
-                    i = 0;
-                    _a.label = 2;
-                case 2:
-                    if (!(i < storeCommodityList.length)) return [3 /*break*/, 8];
-                    storeCommodity = storeCommodityList[i];
+                    _a.trys.push([1, 7, , 8]);
+                    if (Number.isNaN(storeCommodity.store_id) || Number.isNaN(storeCommodity.commodity_id) ||
+                        Number.isNaN(storeCommodity.stock) || Number.isNaN(storeCommodity.state))
+                        return [2 /*return*/, res.status(404).json({ ok: false, message: "La variable 'store_id', 'commodity_id', 'stock' y 'state' son obligatorio!" })];
                     return [4 /*yield*/, checkIfCommodityAndStoreExists(res, storeCommodity.commodity_id, storeCommodity.store_id)];
-                case 3:
+                case 2:
                     _a.sent();
                     return [4 /*yield*/, query_1.query("SELECT * FROM store_commodity \n                    WHERE store_id = " + storeCommodity.store_id + " AND commodity_id = " + storeCommodity.commodity_id)];
-                case 4:
+                case 3:
                     checkIfCommodity_StoreExists = (_a.sent()).result;
-                    if (!(checkIfCommodity_StoreExists[0][0] == null)) return [3 /*break*/, 6];
+                    if (!(checkIfCommodity_StoreExists[0][0] == null)) return [3 /*break*/, 5];
                     insertQuery = "INSERT INTO store_commodity (store_id, commodity_id, stock, state) VALUES \n                 (\"" + storeCommodity.store_id + "\", \"" + storeCommodity.commodity_id + "\", \n                     \"" + storeCommodity.stock + "\", \"" + storeCommodity.state + "\")";
                     return [4 /*yield*/, query_1.query(insertQuery).then(function (data) {
                             if (!data.ok)
                                 return res.status(data.status).json({ ok: false, message: data.message });
                         })];
-                case 5:
+                case 4:
                     _a.sent();
-                    return [3 /*break*/, 7];
-                case 6: return [2 /*return*/, res.status(400).json({ ok: false, message: 'Ya existe esa asociación' })];
+                    return [3 /*break*/, 6];
+                case 5: return [2 /*return*/, res.status(400).json({ ok: false, message: 'Ya existe esa asociación' })];
+                case 6: return [2 /*return*/, res.status(200).json({ ok: true, message: 'Se creó correctamente la asociación' })];
                 case 7:
-                    i++;
-                    return [3 /*break*/, 2];
-                case 8: return [2 /*return*/, res.status(200).json({ ok: true, message: 'Se creó correctamente la asociación' })];
-                case 9:
                     error_2 = _a.sent();
                     return [2 /*return*/, res.status(500).json({ ok: false, message: error_2 })];
-                case 10: return [2 /*return*/];
+                case 8: return [2 /*return*/];
             }
         });
     });
 }
 exports.createStoreCommodity = createStoreCommodity;
+//================== ACTUALIZAR ALMACENES-MERCANCIAS ==================//
+function updateStoreCommodity(req, res) {
+    return __awaiter(this, void 0, void 0, function () {
+        var storeCommodity, updateQuery, error_3;
+        var _this = this;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    storeCommodity = req.body;
+                    if (Number.isNaN(storeCommodity.store_id) || Number.isNaN(storeCommodity.commodity_id) ||
+                        Number.isNaN(storeCommodity.stock) || Number.isNaN(storeCommodity.state))
+                        return [2 /*return*/, res.status(404).json({ ok: false, message: "La variable 'store_id', 'commodity_id', 'stock' y 'state' son obligatorio!" })];
+                    _a.label = 1;
+                case 1:
+                    _a.trys.push([1, 4, , 5]);
+                    return [4 /*yield*/, checkIfCommodityAndStoreExists(res, storeCommodity.commodity_id, storeCommodity.store_id)];
+                case 2:
+                    _a.sent();
+                    updateQuery = "UPDATE store_commodity SET stock=\"" + storeCommodity.stock + "\", state=\"" + storeCommodity.state + "\" WHERE store_id=" + storeCommodity.store_id + " AND commodity_id = \"" + storeCommodity.commodity_id + "\"";
+                    return [4 /*yield*/, query_1.query(updateQuery).then(function (dataUpdate) { return __awaiter(_this, void 0, void 0, function () {
+                            return __generator(this, function (_a) {
+                                if (!dataUpdate.ok)
+                                    return [2 /*return*/, res.status(dataUpdate.status).json({ ok: false, message: dataUpdate.message })];
+                                return [2 /*return*/, res.status(dataUpdate.status).json({ ok: true, message: 'La asociación se actualizó correctamente' })];
+                            });
+                        }); })];
+                case 3: return [2 /*return*/, _a.sent()];
+                case 4:
+                    error_3 = _a.sent();
+                    return [2 /*return*/, res.status(500).json({ ok: false, message: error_3 })];
+                case 5: return [2 /*return*/];
+            }
+        });
+    });
+}
+exports.updateStoreCommodity = updateStoreCommodity;
 function checkIfCommodityAndStoreExists(res, commodityID, storeID) {
     return __awaiter(this, void 0, void 0, function () {
         var checkIfCommodityExists, checkIfStoreExists;

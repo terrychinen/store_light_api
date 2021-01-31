@@ -14,10 +14,11 @@ export async function getStoresCommodities(req: Request, res: Response){
         const getQuery = `SELECT sc.store_id, (SELECT name FROM store WHERE store_id = sc.store_id)store_name, 
         sc.commodity_id, (SELECT name FROM commodity WHERE commodity_id = sc.commodity_id)commodity_name, 
         sc.stock, (SELECT SUM(stock) FROM store_commodity WHERE commodity_id = sc.commodity_id)stock_total, 
-        sc.state FROM store_commodity sc WHERE sc.state = ${state}`;
+        sc.state FROM store_commodity sc LIMIT 20`;
         
         return await query(getQuery).then(data => {
             if(!data.ok) return res.status(data.status).json({ok: false, message: data.message})
+            
             return res.status(data.status).json({ok: true, message: data.message, result: data.result[0]});
         });
     }catch(error) {
@@ -30,33 +31,32 @@ export async function getStoresCommodities(req: Request, res: Response){
 
 //================== CREAR ALMACENES-MERCANCIAS ==================//
 export async function createStoreCommodity(req: Request, res: Response, next: NextFunction) {
-    const storeCommodityList: Array<StoreCommodityModel> = req.body.store_commodity;
+    const storeCommodity: StoreCommodityModel = req.body;
 
-    try{
-        for(let i=0; i<storeCommodityList.length; i++) {
-            const storeCommodity: StoreCommodityModel = storeCommodityList[i];
+    try{       
 
-            await checkIfCommodityAndStoreExists(res, storeCommodity.commodity_id, storeCommodity.store_id);
+        if(Number.isNaN(storeCommodity.store_id) || Number.isNaN(storeCommodity.commodity_id) || 
+        Number.isNaN(storeCommodity.stock) || Number.isNaN(storeCommodity.state)) return res.status(404).json({ok: false, message: `La variable 'store_id', 'commodity_id', 'stock' y 'state' son obligatorio!`});
+
+        await checkIfCommodityAndStoreExists(res, storeCommodity.commodity_id, storeCommodity.store_id);
     
-            let checkIfCommodity_StoreExists = (await query(`SELECT * FROM store_commodity 
+        let checkIfCommodity_StoreExists = (await query(`SELECT * FROM store_commodity 
                     WHERE store_id = ${storeCommodity.store_id} AND commodity_id = ${storeCommodity.commodity_id}`)).result;
                
-
-            if(checkIfCommodity_StoreExists[0][0] == null) {
-                const insertQuery = `INSERT INTO store_commodity (store_id, commodity_id, stock, state) VALUES 
+        if(checkIfCommodity_StoreExists[0][0] == null) {
+            const insertQuery = `INSERT INTO store_commodity (store_id, commodity_id, stock, state) VALUES 
                  ("${storeCommodity.store_id}", "${storeCommodity.commodity_id}", 
                      "${storeCommodity.stock}", "${storeCommodity.state}")`;
     
-                await query(insertQuery).then(data => {
-                    if(!data.ok) return res.status(data.status).json({ok: false, message: data.message})
-                });
+            await query(insertQuery).then(data => {
+                if(!data.ok) return res.status(data.status).json({ok: false, message: data.message})
+            });
 
-            }else{
-                return res.status(400).json({ok: false, message: 'Ya existe esa asociación'});
-            }
+        }else{
+            return res.status(400).json({ok: false, message: 'Ya existe esa asociación'});
         }
 
-        return res.status(200).json({ok: true, message: 'Se creó correctamente la asociación'});
+    return res.status(200).json({ok: true, message: 'Se creó correctamente la asociación'});
     }catch(error) {
         return res.status(500).json({ok: false, message: error});
     }
@@ -64,6 +64,29 @@ export async function createStoreCommodity(req: Request, res: Response, next: Ne
     
     
 
+//================== ACTUALIZAR ALMACENES-MERCANCIAS ==================//
+export async function updateStoreCommodity(req: Request, res: Response) {
+    const storeCommodity: StoreCommodityModel = req.body;
+
+    if(Number.isNaN(storeCommodity.store_id) || Number.isNaN(storeCommodity.commodity_id) || 
+    Number.isNaN(storeCommodity.stock) || Number.isNaN(storeCommodity.state)) return res.status(404).json({ok: false, message: `La variable 'store_id', 'commodity_id', 'stock' y 'state' son obligatorio!`});
+
+
+    try {
+
+        await checkIfCommodityAndStoreExists(res, storeCommodity.commodity_id, storeCommodity.store_id);
+    
+        const updateQuery = `UPDATE store_commodity SET stock="${storeCommodity.stock}", state="${storeCommodity.state}" WHERE store_id=${storeCommodity.store_id} AND commodity_id = "${storeCommodity.commodity_id}"`;    
+    
+        return await query(updateQuery).then(async dataUpdate => {
+            if(!dataUpdate.ok) return res.status(dataUpdate.status).json({ok: false, message: dataUpdate.message});    
+            return res.status(dataUpdate.status).json({ok: true, message: 'La asociación se actualizó correctamente'});     
+        });
+
+    }catch(error) {
+        return res.status(500).json({ok: false, message: error});
+    }   
+}
    
 
 

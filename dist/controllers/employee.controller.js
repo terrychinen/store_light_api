@@ -56,7 +56,7 @@ function getEmployees(req, res) {
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
-                    getQuery = "SELECT employee_id, token_id, name, username, state FROM employee WHERE state = " + state;
+                    getQuery = "SELECT employee_id, name, username, state FROM employee WHERE state = " + state;
                     return [4 /*yield*/, query_1.query(getQuery).then(function (data) {
                             if (!data.ok)
                                 return res.status(data.status).json({ ok: false, message: data.message });
@@ -100,7 +100,7 @@ function createEmployee(req, res) {
                                         return [4 /*yield*/, bcrypt_1.default.hashSync(employee.password, 10)];
                                     case 1:
                                         password = _a.sent();
-                                        insertQuery = "INSERT INTO employee (name, username, password state) VALUES (\"" + employee.name + "\", \"" + employee.username + "\", \"" + password + "\", \"" + employee.state + "\")";
+                                        insertQuery = "INSERT INTO employee (name, username, password, state) VALUES (\"" + employee.name + "\", \"" + employee.username + "\", \"" + password + "\", \"" + employee.state + "\")";
                                         return [4 /*yield*/, query_1.query(insertQuery).then(function (data) {
                                                 if (!data.ok)
                                                     return res.status(data.status).json({ ok: false, message: data.message });
