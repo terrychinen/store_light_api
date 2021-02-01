@@ -15,8 +15,6 @@ import EmployeeRoutes from './routes/employee.routes';
 import StoreCommodityRoutes from './routes/store_commodity.routes';
 import PurchaseOrderRoutes from './routes/purchase_order.routes';
 
-import { tokenValidation } from './middlewares/authentication';
-
 export class App {
     private app: Application;
     private port: number | string;
@@ -43,8 +41,8 @@ export class App {
         this.app.use(express.json());
     }
 
-    public async listen() {
-        await this.app.listen(this.app.get('port'), '0.0.0.0');
+    public listen() {
+        this.app.listen(this.app.get('port'), '0.0.0.0');
         console.log('Server on port', this.app.get('port'));
     }
 
