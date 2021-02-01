@@ -63,34 +63,39 @@ function signIn(req, res) {
                     }
                     queryGet = "SELECT * FROM employee WHERE username = \"" + body.username + "\"";
                     return [4 /*yield*/, query_1.query(queryGet).then(function (data) { return __awaiter(_this, void 0, void 0, function () {
-                            var employeeDB, compare, token, expiresIn, e_1;
+                            var employeeDB_1, compare, token_1, expiresIn_1, e_1;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
                                     case 0:
                                         _a.trys.push([0, 2, , 3]);
                                         if (!data.ok)
                                             return [2 /*return*/, res.status(data.status).json({ ok: false, message: data.message })];
-                                        employeeDB = data.result[0][0];
-                                        if (employeeDB == null) {
+                                        employeeDB_1 = data.result[0][0];
+                                        if (employeeDB_1 == null) {
                                             return [2 /*return*/, res.status(400).json({ ok: false, message: 'El usuario o la contraseña es incorrecto' })];
                                         }
-                                        return [4 /*yield*/, bcrypt_1.default.compareSync(body.password, employeeDB.password)];
+                                        return [4 /*yield*/, bcrypt_1.default.compareSync(body.password, employeeDB_1.password)];
                                     case 1:
                                         compare = _a.sent();
                                         if (!compare)
                                             return [2 /*return*/, res.status(400).json({ ok: false, message: 'El usuario o la contraseña es incorrecto' })];
-                                        if (employeeDB.state == 0) {
+                                        if (employeeDB_1.state == 0) {
                                             return [2 /*return*/, res.status(403).json({ ok: false, message: 'Cuenta eliminado' })];
                                         }
-                                        delete employeeDB.password;
-                                        token = jsonwebtoken_1.default.sign({ user: employeeDB }, process.env.TOKEN_SECRET, { expiresIn: process.env.TOKEN_EXPIRATION });
-                                        expiresIn = Number(process.env.TOKEN_EXPIRATION);
-                                        return [2 /*return*/, res.status(200).json({
-                                                ok: true,
-                                                message: 'Inicio de sesión correcto!',
-                                                user: employeeDB,
-                                                expires_in: expiresIn,
-                                                date: moment_1.default().format('YYYY-MM-DD HH:mm:ss')
+                                        delete employeeDB_1.password;
+                                        token_1 = jsonwebtoken_1.default.sign({ user: employeeDB_1 }, process.env.TOKEN_SECRET, { expiresIn: process.env.TOKEN_EXPIRATION });
+                                        expiresIn_1 = Number(process.env.TOKEN_EXPIRATION);
+                                        return [2 /*return*/, token_controller_1.updateNewToken(employeeDB_1, token_1).then(function (data) {
+                                                if (!data.ok)
+                                                    return res.status(400).json({ ok: false, message: data.message });
+                                                return res.status(200).json({
+                                                    ok: true,
+                                                    message: 'Inicio de sesión correcto!',
+                                                    user: employeeDB_1,
+                                                    token: token_1,
+                                                    expires_in: expiresIn_1,
+                                                    date: moment_1.default().format('YYYY-MM-DD HH:mm:ss')
+                                                });
                                             })];
                                     case 2:
                                         e_1 = _a.sent();
@@ -116,6 +121,7 @@ function signUp(req, res) {
             switch (_a.label) {
                 case 0:
                     _a.trys.push([0, 2, , 3]);
+                    console.log('HOLAAAAAAAAAAAAAAAAAAAAAAAa');
                     employee_1 = req.body;
                     if (employee_1.name == null || employee_1.username == null || employee_1.password == null || employee_1.state == null) {
                         return [2 /*return*/, res.status(404).json({
@@ -123,6 +129,7 @@ function signUp(req, res) {
                                 message: "La variable 'name', 'username' 'password' y 'state' son obligatorio!"
                             })];
                     }
+                    console.log('DOSSSSSSSSSSSSSSSSSSSSSSSSsss');
                     queryCheck = "SELECT * FROM employee WHERE username = \"" + employee_1.username + "\"";
                     return [4 /*yield*/, query_1.query(queryCheck).then(function (dataCheck) { return __awaiter(_this, void 0, void 0, function () {
                             var employeeDB, password, createEmployeeQuery;
@@ -133,6 +140,7 @@ function signUp(req, res) {
                                         if (!dataCheck.ok) {
                                             return [2 /*return*/, res.status(400).json({ ok: false, message: dataCheck.message })];
                                         }
+                                        console.log('DOEREFERFERFEFERFE');
                                         employeeDB = dataCheck.result[0][0];
                                         if (employeeDB != null) {
                                             return [2 /*return*/, res.status(400).json({ ok: false, message: 'El nombre de usuario ya existe' })];

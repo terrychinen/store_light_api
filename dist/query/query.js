@@ -44,15 +44,13 @@ function query(queryString) {
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    _a.trys.push([0, 4, , 5]);
-                    return [4 /*yield*/, database_1.connect()];
-                case 1:
-                    conn = _a.sent();
+                    _a.trys.push([0, 3, , 4]);
+                    conn = database_1.connect();
                     return [4 /*yield*/, conn.query(queryString)];
-                case 2:
+                case 1:
                     query_1 = _a.sent();
                     return [4 /*yield*/, conn.end()];
-                case 3:
+                case 2:
                     _a.sent();
                     if (!query_1)
                         return [2 /*return*/, ({ ok: false, status: 400, message: 'Query error', result: [] })];
@@ -62,10 +60,10 @@ function query(queryString) {
                             message: 'Query successful',
                             result: query_1
                         })];
-                case 4:
+                case 3:
                     e_1 = _a.sent();
                     return [2 /*return*/, ({ ok: false, status: 500, message: e_1.toString(), result: [] })];
-                case 5: return [2 /*return*/];
+                case 4: return [2 /*return*/];
             }
         });
     });

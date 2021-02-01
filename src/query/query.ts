@@ -3,7 +3,7 @@ import { connect } from '../database';
 
 export async function query(queryString: string) {
     try{
-        const conn = await connect();
+        const conn = connect();
         const query = await conn.query(queryString);
 
         await conn.end();

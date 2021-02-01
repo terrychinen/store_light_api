@@ -41,13 +41,17 @@ export async function signIn(req: Request, res: Response) {
 
             let expiresIn = Number(process.env.TOKEN_EXPIRATION);
     
-            return res.status(200).json({
-                ok: true,
-                message: 'Inicio de sesión correcto!',
-                user: employeeDB,              
-                expires_in: expiresIn,
-                date: moment().format('YYYY-MM-DD HH:mm:ss')
-            });
+            return updateNewToken(employeeDB, token).then(data => {
+                if(!data.ok) return res.status(400).json({ok: false, message: data.message})
+                return res.status(200).json({
+                    ok: true,
+                    message: 'Inicio de sesión correcto!',
+                    user: employeeDB,
+                    token,
+                    expires_in: expiresIn,
+                    date: moment().format('YYYY-MM-DD HH:mm:ss')
+                });
+            });   
         }catch(e){
             return res.status(400).json({
                 ok: false,
@@ -60,6 +64,7 @@ export async function signIn(req: Request, res: Response) {
 
 export async function signUp(req: Request, res: Response) {
     try{
+        console.log('HOLAAAAAAAAAAAAAAAAAAAAAAAa');
         const employee: EmployeeModel = req.body;
 
         if(employee.name == null || employee.username == null || employee.password == null || employee.state == null) {
@@ -69,12 +74,14 @@ export async function signUp(req: Request, res: Response) {
             });
         } 
 
+        console.log('DOSSSSSSSSSSSSSSSSSSSSSSSSsss');
         const queryCheck = `SELECT * FROM employee WHERE username = "${employee.username}"`;
         
         //VERIFICAMOS SI EL NOMBRE DEL USUARIO EXISTE
         return await query(queryCheck).then(async dataCheck => {
             if(!dataCheck.ok) {return res.status(400).json({ok: false, message: dataCheck.message});}
 
+            console.log('DOEREFERFERFEFERFE');
             const employeeDB: EmployeeModel = dataCheck.result[0][0];
 
             if(employeeDB != null) {return res.status(400).json({ok: false, message: 'El nombre de usuario ya existe'});}
