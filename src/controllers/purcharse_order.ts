@@ -88,18 +88,26 @@ export async function createPurchaseOrder(req: Request, res: Response) {
 
         await checkIfProviderAndEmployeeExists(res, purchaseOrder.provider_id, purchaseOrder.employee_id);
 
-        if(purchaseOrder.expected_date == null || purchaseOrder.expected_date == '') {
-            purchaseOrder.expected_date = '0000-00-00 00:00:00';
+        let insertOrder = '';
+        if(purchaseOrder.expected_date == null || purchaseOrder.expected_date == '') {            
+            insertOrder = `INSERT INTO purchase_order (provider_id, employee_id, order_date, 
+                receive_date, total_price, message, state) VALUES (${purchaseOrder.provider_id}, ${purchaseOrder.employee_id}, 
+                    "${purchaseOrder.order_date}", "${purchaseOrder.receive_date}", ${purchaseOrder.total_price}, "${purchaseOrder.message}", ${purchaseOrder.state})`;
         } 
 
         if(purchaseOrder.receive_date == null || purchaseOrder.receive_date == '') {
-            purchaseOrder.receive_date = '0000-00-00 00:00:00';
+            insertOrder = `INSERT INTO purchase_order (provider_id, employee_id, order_date, expected_date, 
+                 total_price, message, state) VALUES (${purchaseOrder.provider_id}, ${purchaseOrder.employee_id}, 
+                    "${purchaseOrder.order_date}", "${purchaseOrder.expected_date}", ${purchaseOrder.total_price}, "${purchaseOrder.message}", ${purchaseOrder.state})`;            
         } 
 
-        const insertOrder = `INSERT INTO purchase_order (provider_id, employee_id, order_date, expected_date, 
-            receive_date, total_price, message, state) VALUES (${purchaseOrder.provider_id}, ${purchaseOrder.employee_id}, 
-                "${purchaseOrder.order_date}", "${purchaseOrder.expected_date}", "${purchaseOrder.receive_date}", 
-                ${purchaseOrder.total_price}, "${purchaseOrder.message}", ${purchaseOrder.state})`;
+
+        if((purchaseOrder.receive_date != null || purchaseOrder.receive_date != '') && (purchaseOrder.expected_date == null || purchaseOrder.expected_date == '')) {
+            insertOrder = `INSERT INTO purchase_order (provider_id, employee_id, order_date, expected_date, 
+                receive_date, total_price, message, state) VALUES (${purchaseOrder.provider_id}, ${purchaseOrder.employee_id}, 
+                    "${purchaseOrder.order_date}", "${purchaseOrder.expected_date}", "${purchaseOrder.receive_date}", 
+                    ${purchaseOrder.total_price}, "${purchaseOrder.message}", ${purchaseOrder.state})`;
+        }        
 
 
          return await query(insertOrder).then(async createOrderData => {
@@ -108,12 +116,6 @@ export async function createPurchaseOrder(req: Request, res: Response) {
            const purchaseOrderID = createOrderData.result[0].insertId;
     
             for(let i=0; i<commodityIDList.length; i++) {
-
-                console.log(`==================================`);
-                console.log(`${quantityList[i]}`);
-                console.log(`${unitPriceList[i]}`);
-                console.log(`==================================`);
-
                 const insertOrderDetail = `INSERT INTO purchase_order_detail (purchase_order_id, commodity_id, quantity, unit_price, 
                     total_price) VALUES ("${purchaseOrderID}", "${commodityIDList[i]}", "${quantityList[i]}", 
                             "${unitPriceList[i]}", "${totalPriceList[i]}")`;

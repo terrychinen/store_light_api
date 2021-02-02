@@ -138,7 +138,9 @@ export async function searchCommodity(req: Request, res: Response){
             columnName = 'name';
         }
 
-        const querySearch = `SELECT * FROM commodity WHERE ${columnName} LIKE "%${search}%" AND state = ${state} LIMIT 10`;
+        const querySearch = `SELECT commodity_id, name, category_id,
+        (SELECT name FROM category WHERE category_id, comm.category_id)category_name
+        FROM commodity WHERE ${columnName} LIKE "%${search}%" AND state = ${state} LIMIT 10`;
 
         return await query(querySearch).then( data => {
             if(!data.ok) return res.status(data.status).json({ok: false, message: data.message})
