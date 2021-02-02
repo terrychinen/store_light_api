@@ -8,7 +8,6 @@ import dateformat from 'dateformat';
 //================== OBTENER TODAS LOS ORDENES DE PEDIDOS ==================//
 export async function getPurchaseOrders(req: Request, res: Response){
     const offset = Number(req.query.offset);
-  //  const state = Number(req.query.state);
 
     if(Number.isNaN(offset)) return res.status(404).json({ok: false, message: `La variable 'offset' es obligatorio!`});
 
@@ -95,7 +94,7 @@ export async function createPurchaseOrder(req: Request, res: Response) {
                     total_price, message, state) VALUES (${purchaseOrder.provider_id}, ${purchaseOrder.employee_id}, 
                         "${purchaseOrder.order_date}", ${purchaseOrder.total_price}, "${purchaseOrder.message}", ${purchaseOrder.state})`;
             }else {                                
-                insertOrder = `INSERT INTO purchase_order (provider_id, employee_id, order_date, receive_data, 
+                insertOrder = `INSERT INTO purchase_order (provider_id, employee_id, order_date, receive_date, 
                     total_price, message, state) VALUES (${purchaseOrder.provider_id}, ${purchaseOrder.employee_id}, 
                         "${purchaseOrder.order_date}", "${purchaseOrder.receive_date}", ${purchaseOrder.total_price}, "${purchaseOrder.message}", ${purchaseOrder.state})`;
             }      
@@ -106,7 +105,7 @@ export async function createPurchaseOrder(req: Request, res: Response) {
                     total_price, message, state) VALUES (${purchaseOrder.provider_id}, ${purchaseOrder.employee_id}, 
                         "${purchaseOrder.order_date}", ${purchaseOrder.total_price}, "${purchaseOrder.message}", ${purchaseOrder.state})`;
             }else{
-                insertOrder = `INSERT INTO purchase_order (provider_id, employee_id, order_date, expected_data, 
+                insertOrder = `INSERT INTO purchase_order (provider_id, employee_id, order_date, expected_date, 
                     total_price, message, state) VALUES (${purchaseOrder.provider_id}, ${purchaseOrder.employee_id}, 
                         "${purchaseOrder.order_date}", "${purchaseOrder.expected_date}", "${purchaseOrder.receive_date}", ${purchaseOrder.total_price}, "${purchaseOrder.message}", ${purchaseOrder.state})`;
             }
@@ -170,20 +169,40 @@ export async function updatePurchaseOrder(req: Request, res: Response) {
 
     try {    
         await checkIfProviderAndEmployeeExists(res, purchaseOrder.provider_id, purchaseOrder.updated_by);
+        
+        let updateQuery = '';
+        if(purchaseOrder.expected_date == null || purchaseOrder.expected_date == '') {      
+            if(purchaseOrder.receive_date == null || purchaseOrder.receive_date == '') {
+                updateQuery = `UPDATE purchase_order SET provider_id=${purchaseOrder.provider_id}, 
+                order_date="${purchaseOrder.order_date}", expected_date=${null}, receive_date=${null}, 
+                total_price=${purchaseOrder.total_price}, updated_by=${purchaseOrder.updated_by}, 
+                message="${purchaseOrder.message}", state=${purchaseOrder.state} WHERE purchase_order_id = ${purchaseOrderID}`;             
 
-
-        if(purchaseOrder.expected_date == null || purchaseOrder.expected_date == '') {
-            purchaseOrder.expected_date = '0000-00-00 00:00:00';
-        } 
-
-        if(purchaseOrder.receive_date == null || purchaseOrder.receive_date == '') {
-            purchaseOrder.receive_date = '0000-00-00 00:00:00';
-        } 
-
-
-        const updateQuery = `UPDATE purchase_order SET provider_id=${purchaseOrder.provider_id}, order_date="${purchaseOrder.order_date}", 
-        expected_date="${purchaseOrder.expected_date}", receive_date="${purchaseOrder.receive_date}", total_price=${purchaseOrder.total_price}, 
-        updated_by=${purchaseOrder.updated_by}, message="${purchaseOrder.message}", state=${purchaseOrder.state} WHERE purchase_order_id = ${purchaseOrderID}`; 
+            }else {       
+                updateQuery = `UPDATE purchase_order SET provider_id=${purchaseOrder.provider_id}, 
+                order_date="${purchaseOrder.order_date}", receive_date="${purchaseOrder.receive_date}", 
+                expected_date=${null}, total_price=${purchaseOrder.total_price}, updated_by=${purchaseOrder.updated_by},
+                message="${purchaseOrder.message}", state=${purchaseOrder.state} WHERE purchase_order_id = ${purchaseOrderID}`;             
+            }      
+        
+        }else if(purchaseOrder.receive_date == null || purchaseOrder.receive_date == ''){
+            if(purchaseOrder.expected_date == null || purchaseOrder.expected_date == '') { 
+                updateQuery = `UPDATE purchase_order SET provider_id=${purchaseOrder.provider_id}, 
+                order_date="${purchaseOrder.order_date}", expected_date=${null}, receive_date=${null},
+                total_price=${purchaseOrder.total_price}, updated_by=${purchaseOrder.updated_by},  
+                message="${purchaseOrder.message}", state=${purchaseOrder.state} WHERE purchase_order_id = ${purchaseOrderID}`;                
+            }else{
+                updateQuery = `UPDATE purchase_order SET provider_id=${purchaseOrder.provider_id}, 
+                order_date="${purchaseOrder.order_date}", expected_date="${purchaseOrder.expected_date}", 
+                receive_date=${null}, total_price=${purchaseOrder.total_price}, updated_by=${purchaseOrder.updated_by},
+                message="${purchaseOrder.message}", state=${purchaseOrder.state} WHERE purchase_order_id = ${purchaseOrderID}`;  
+            }
+        
+        } else {
+            updateQuery = `UPDATE purchase_order SET provider_id=${purchaseOrder.provider_id}, order_date="${purchaseOrder.order_date}", 
+            expected_date="${purchaseOrder.expected_date}", receive_date="${purchaseOrder.receive_date}", total_price=${purchaseOrder.total_price}, 
+            updated_by=${purchaseOrder.updated_by}, message="${purchaseOrder.message}", state=${purchaseOrder.state} WHERE purchase_order_id = ${purchaseOrderID}`; 
+        }        
     
         return await query(updateQuery).then(async data => {
             if(!data.ok) return res.status(data.status).json({ok: false, message: data.message});
@@ -211,7 +230,6 @@ export async function updatePurchaseOrder(req: Request, res: Response) {
 
 
 
-
 async function checkIfProviderAndEmployeeExists(res: Response, providerID: Number, employeeID: Number) {
     let checkIfProviderExists = (await query(`SELECT * FROM provider WHERE provider_id = ${providerID}`)).result;
     if(checkIfProviderExists[0][0] == null) {
@@ -221,5 +239,46 @@ async function checkIfProviderAndEmployeeExists(res: Response, providerID: Numbe
     let checkIfEmployeeExists = (await query(`SELECT * FROM employee WHERE employee_id = ${employeeID}`)).result;
     if(checkIfEmployeeExists[0][0] == null) {
         return res.status(400).json({ok: false, message: 'No existe el ID del proveedor'});
+    }
+}
+
+
+
+export async function getPurchaseOrdersWithState(req: Request, res: Response){
+    const offset = Number(req.query.offset);
+    const state = Number(req.query.state);
+
+    if(Number.isNaN(offset)) return res.status(404).json({ok: false, message: `La variable 'offset' es obligatorio!`});
+
+    try {
+        const getQuery = `SELECT purchase_order_id, provider_id, 
+        (SELECT name FROM provider WHERE provider_id = po.provider_id)provider_name, 
+        employee_id, (SELECT name FROM employee WHERE employee_id = po.employee_id)employee_name, 
+        order_date, expected_date, receive_date, total_price, message, updated_by, 
+        (SELECT name FROM employee WHERE employee_id = po.updated_by)updated_name,
+        state FROM purchase_order po WHERE state = ${state} ORDER BY order_date DESC LIMIT 20`;
+
+        return await query(getQuery).then(data => {
+            for(var i=0; i<data.result[0].length; i++) {                                                          
+                if (!isNaN(data.result[0][i].order_date)) {
+                    var orderDate = new Date(data.result[0][i].order_date);
+                    data.result[0][i].order_date = dateformat(orderDate, 'yyyy-mm-dd hh:MM:ss');
+                }
+
+                if (!isNaN(data.result[0][i].expected_date)){
+                    var expectedDate = new Date(data.result[0][i].expected_date);
+                    data.result[0][i].expected_date = dateformat(expectedDate, 'yyyy-mm-dd hh:MM:ss');
+                }
+
+                if (!isNaN(data.result[0][i].receive_date)) {
+                    var receiveDate = new Date(data.result[0][i].receive_date);    
+                    data.result[0][i].receive_date = dateformat(receiveDate, 'yyyy-mm-dd hh:MM:ss');
+                }
+            }
+            if(!data.ok) return res.status(data.status).json({ok: false, message: data.message})
+            return res.status(data.status).json({ok: true, message: data.message, result: data.result[0]});
+        });
+    }catch(error) {
+        return res.status(500).json({ok: false, message: error});
     }
 }
