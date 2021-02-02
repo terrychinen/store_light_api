@@ -5,8 +5,8 @@ export function connect() {
     const connection: Pool = createPool({
         host: '0.0.0.0',
         port: 3306,
-        user: 'root',
-        password: process.env.DATABASE_PASSOWRD,
+        user: 'tery',
+        password: 'Aka.li$$2',
         database: 'store_db',
         waitForConnections: true,
         connectionLimit: 10,

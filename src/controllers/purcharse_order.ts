@@ -89,20 +89,29 @@ export async function createPurchaseOrder(req: Request, res: Response) {
         await checkIfProviderAndEmployeeExists(res, purchaseOrder.provider_id, purchaseOrder.employee_id);
 
         let insertOrder = '';
-        if(purchaseOrder.expected_date == null || purchaseOrder.expected_date == '') {            
-            insertOrder = `INSERT INTO purchase_order (provider_id, employee_id, order_date, 
-                receive_date, total_price, message, state) VALUES (${purchaseOrder.provider_id}, ${purchaseOrder.employee_id}, 
-                    "${purchaseOrder.order_date}", "${purchaseOrder.receive_date}", ${purchaseOrder.total_price}, "${purchaseOrder.message}", ${purchaseOrder.state})`;
-        } 
-
-        if(purchaseOrder.receive_date == null || purchaseOrder.receive_date == '') {
-            insertOrder = `INSERT INTO purchase_order (provider_id, employee_id, order_date, expected_date, 
-                 total_price, message, state) VALUES (${purchaseOrder.provider_id}, ${purchaseOrder.employee_id}, 
-                    "${purchaseOrder.order_date}", "${purchaseOrder.expected_date}", ${purchaseOrder.total_price}, "${purchaseOrder.message}", ${purchaseOrder.state})`;            
-        } 
-
-
-        if((purchaseOrder.receive_date != null || purchaseOrder.receive_date != '') && (purchaseOrder.expected_date == null || purchaseOrder.expected_date == '')) {
+        if(purchaseOrder.expected_date == null || purchaseOrder.expected_date == '') {      
+            if(purchaseOrder.receive_date == null || purchaseOrder.receive_date == '') {
+                insertOrder = `INSERT INTO purchase_order (provider_id, employee_id, order_date, 
+                    total_price, message, state) VALUES (${purchaseOrder.provider_id}, ${purchaseOrder.employee_id}, 
+                        "${purchaseOrder.order_date}", ${purchaseOrder.total_price}, "${purchaseOrder.message}", ${purchaseOrder.state})`;
+            }else {                                
+                insertOrder = `INSERT INTO purchase_order (provider_id, employee_id, order_date, receive_data, 
+                    total_price, message, state) VALUES (${purchaseOrder.provider_id}, ${purchaseOrder.employee_id}, 
+                        "${purchaseOrder.order_date}", "${purchaseOrder.receive_date}", ${purchaseOrder.total_price}, "${purchaseOrder.message}", ${purchaseOrder.state})`;
+            }      
+        
+        }else if(purchaseOrder.receive_date == null || purchaseOrder.receive_date == ''){
+            if(purchaseOrder.expected_date == null || purchaseOrder.expected_date == '') { 
+                insertOrder = `INSERT INTO purchase_order (provider_id, employee_id, order_date, 
+                    total_price, message, state) VALUES (${purchaseOrder.provider_id}, ${purchaseOrder.employee_id}, 
+                        "${purchaseOrder.order_date}", ${purchaseOrder.total_price}, "${purchaseOrder.message}", ${purchaseOrder.state})`;
+            }else{
+                insertOrder = `INSERT INTO purchase_order (provider_id, employee_id, order_date, expected_data, 
+                    total_price, message, state) VALUES (${purchaseOrder.provider_id}, ${purchaseOrder.employee_id}, 
+                        "${purchaseOrder.order_date}", "${purchaseOrder.expected_date}", "${purchaseOrder.receive_date}", ${purchaseOrder.total_price}, "${purchaseOrder.message}", ${purchaseOrder.state})`;
+            }
+        
+        } else {
             insertOrder = `INSERT INTO purchase_order (provider_id, employee_id, order_date, expected_date, 
                 receive_date, total_price, message, state) VALUES (${purchaseOrder.provider_id}, ${purchaseOrder.employee_id}, 
                     "${purchaseOrder.order_date}", "${purchaseOrder.expected_date}", "${purchaseOrder.receive_date}", 
