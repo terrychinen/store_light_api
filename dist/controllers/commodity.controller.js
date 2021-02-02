@@ -240,7 +240,7 @@ function searchCommodity(req, res) {
                     else if (searchBy == 1) {
                         columnName = 'name';
                     }
-                    querySearch = "SELECT * FROM commodity WHERE " + columnName + " LIKE \"%" + search + "%\" AND state = " + state + " LIMIT 10";
+                    querySearch = "SELECT commodity_id, name, category_id,\n        (SELECT name FROM category WHERE category_id, comm.category_id)category_name\n        FROM commodity WHERE " + columnName + " LIKE \"%" + search + "%\" AND state = " + state + " LIMIT 10";
                     return [4 /*yield*/, query_1.query(querySearch).then(function (data) {
                             if (!data.ok)
                                 return res.status(data.status).json({ ok: false, message: data.message });

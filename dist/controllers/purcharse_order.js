@@ -141,13 +141,26 @@ function createPurchaseOrder(req, res) {
                     return [4 /*yield*/, checkIfProviderAndEmployeeExists(res, purchaseOrder.provider_id, purchaseOrder.employee_id)];
                 case 2:
                     _a.sent();
+                    insertOrder = '';
                     if (purchaseOrder.expected_date == null || purchaseOrder.expected_date == '') {
-                        purchaseOrder.expected_date = '0000-00-00 00:00:00';
+                        if (purchaseOrder.receive_date == null || purchaseOrder.receive_date == '') {
+                            insertOrder = "INSERT INTO purchase_order (provider_id, employee_id, order_date, \n                    total_price, message, state) VALUES (" + purchaseOrder.provider_id + ", " + purchaseOrder.employee_id + ", \n                        \"" + purchaseOrder.order_date + "\", " + purchaseOrder.total_price + ", \"" + purchaseOrder.message + "\", " + purchaseOrder.state + ")";
+                        }
+                        else {
+                            insertOrder = "INSERT INTO purchase_order (provider_id, employee_id, order_date, receive_data, \n                    total_price, message, state) VALUES (" + purchaseOrder.provider_id + ", " + purchaseOrder.employee_id + ", \n                        \"" + purchaseOrder.order_date + "\", \"" + purchaseOrder.receive_date + "\", " + purchaseOrder.total_price + ", \"" + purchaseOrder.message + "\", " + purchaseOrder.state + ")";
+                        }
                     }
-                    if (purchaseOrder.receive_date == null || purchaseOrder.receive_date == '') {
-                        purchaseOrder.receive_date = '0000-00-00 00:00:00';
+                    else if (purchaseOrder.receive_date == null || purchaseOrder.receive_date == '') {
+                        if (purchaseOrder.expected_date == null || purchaseOrder.expected_date == '') {
+                            insertOrder = "INSERT INTO purchase_order (provider_id, employee_id, order_date, \n                    total_price, message, state) VALUES (" + purchaseOrder.provider_id + ", " + purchaseOrder.employee_id + ", \n                        \"" + purchaseOrder.order_date + "\", " + purchaseOrder.total_price + ", \"" + purchaseOrder.message + "\", " + purchaseOrder.state + ")";
+                        }
+                        else {
+                            insertOrder = "INSERT INTO purchase_order (provider_id, employee_id, order_date, expected_data, \n                    total_price, message, state) VALUES (" + purchaseOrder.provider_id + ", " + purchaseOrder.employee_id + ", \n                        \"" + purchaseOrder.order_date + "\", \"" + purchaseOrder.expected_date + "\", \"" + purchaseOrder.receive_date + "\", " + purchaseOrder.total_price + ", \"" + purchaseOrder.message + "\", " + purchaseOrder.state + ")";
+                        }
                     }
-                    insertOrder = "INSERT INTO purchase_order (provider_id, employee_id, order_date, expected_date, \n            receive_date, total_price, message, state) VALUES (" + purchaseOrder.provider_id + ", " + purchaseOrder.employee_id + ", \n                \"" + purchaseOrder.order_date + "\", \"" + purchaseOrder.expected_date + "\", \"" + purchaseOrder.receive_date + "\", \n                " + purchaseOrder.total_price + ", \"" + purchaseOrder.message + "\", " + purchaseOrder.state + ")";
+                    else {
+                        insertOrder = "INSERT INTO purchase_order (provider_id, employee_id, order_date, expected_date, \n                receive_date, total_price, message, state) VALUES (" + purchaseOrder.provider_id + ", " + purchaseOrder.employee_id + ", \n                    \"" + purchaseOrder.order_date + "\", \"" + purchaseOrder.expected_date + "\", \"" + purchaseOrder.receive_date + "\", \n                    " + purchaseOrder.total_price + ", \"" + purchaseOrder.message + "\", " + purchaseOrder.state + ")";
+                    }
                     return [4 /*yield*/, query_1.query(insertOrder).then(function (createOrderData) { return __awaiter(_this, void 0, void 0, function () {
                             var purchaseOrderID, i, insertOrderDetail;
                             return __generator(this, function (_a) {
@@ -160,10 +173,6 @@ function createPurchaseOrder(req, res) {
                                         _a.label = 1;
                                     case 1:
                                         if (!(i < commodityIDList.length)) return [3 /*break*/, 4];
-                                        console.log("==================================");
-                                        console.log("" + quantityList[i]);
-                                        console.log("" + unitPriceList[i]);
-                                        console.log("==================================");
                                         insertOrderDetail = "INSERT INTO purchase_order_detail (purchase_order_id, commodity_id, quantity, unit_price, \n                    total_price) VALUES (\"" + purchaseOrderID + "\", \"" + commodityIDList[i] + "\", \"" + quantityList[i] + "\", \n                            \"" + unitPriceList[i] + "\", \"" + totalPriceList[i] + "\")";
                                         return [4 /*yield*/, query_1.query(insertOrderDetail)];
                                     case 2:
