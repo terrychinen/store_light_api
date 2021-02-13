@@ -7,4 +7,6 @@ router.route('/')
     .get(store_commodity_controller_1.getStoresCommodities)
     .post(store_commodity_controller_1.createStoreCommodity)
     .put(store_commodity_controller_1.updateStoreCommodity);
+router.route('/:store_id')
+    .post(store_commodity_controller_1.getCommoditiesByStoreID);
 exports.default = router;

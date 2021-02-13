@@ -14,8 +14,8 @@ export async function getPurchaseOrders(req: Request, res: Response){
     try {
         const getQuery = `SELECT purchase_order_id, provider_id, 
         (SELECT name FROM provider WHERE provider_id = po.provider_id)provider_name, 
-        employee_id, (SELECT name FROM employee WHERE employee_id = po.employee_id)employee_name, 
-        order_date, expected_date, receive_date, total_price, message, updated_by, 
+        employee_id, (SELECT username FROM employee WHERE employee_id = po.employee_id)employee_name, 
+        order_date, expected_date, receive_date, paid_date, total_price, message, updated_by, 
         (SELECT name FROM employee WHERE employee_id = po.updated_by)updated_name,
         state FROM purchase_order po ORDER BY state ASC, order_date DESC LIMIT 20`;
 
@@ -24,16 +24,43 @@ export async function getPurchaseOrders(req: Request, res: Response){
                 if (!isNaN(data.result[0][i].order_date)) {
                     var orderDate = new Date(data.result[0][i].order_date);
                     data.result[0][i].order_date = dateformat(orderDate, 'yyyy-mm-dd hh:MM:ss');
+                    if( data.result[0][i].order_date == '1969-12-31 07:00:00') {
+                        data.result[0][i].order_date = null;                       
+                    }
+                   
+                }else{
+                    data.result[0][i].order_date = null;
                 }
 
                 if (!isNaN(data.result[0][i].expected_date)){
                     var expectedDate = new Date(data.result[0][i].expected_date);
                     data.result[0][i].expected_date = dateformat(expectedDate, 'yyyy-mm-dd hh:MM:ss');
+                    if( data.result[0][i].expected_date == '1969-12-31 07:00:00') {
+                        data.result[0][i].expected_date = null;
+                    }                
+                }else{
+                    data.result[0][i].expected_date = null;
                 }
 
                 if (!isNaN(data.result[0][i].receive_date)) {
-                    var receiveDate = new Date(data.result[0][i].receive_date);    
+                    var receiveDate = new Date(data.result[0][i].receive_date); 
                     data.result[0][i].receive_date = dateformat(receiveDate, 'yyyy-mm-dd hh:MM:ss');
+                    if(data.result[0][i].receive_date == '1969-12-31 07:00:00') {
+                        data.result[0][i].receive_date = null;
+                    }               
+                }else{
+                    data.result[0][i].receive_date = null;
+                }
+
+                if (!isNaN(data.result[0][i].paid_date)) {
+                    var paidDate = new Date(data.result[0][i].paid_date);    
+                    data.result[0][i].paid_date = dateformat(paidDate, 'yyyy-mm-dd hh:MM:ss');
+                    if(data.result[0][i].paid_date == '1969-12-31 07:00:00') {
+                        data.result[0][i].paid_date = null;
+                    }
+                   
+                }else{
+                    data.result[0][i].paid_date = null;
                 }
             }
             if(!data.ok) return res.status(data.status).json({ok: false, message: data.message})
@@ -69,12 +96,11 @@ export async function getPurchaseOrderDetail(req: Request, res: Response){
 }
 
 
-
 //================== CREAR UN ORDEN DE PEDIDO ==================//
 export async function createPurchaseOrder(req: Request, res: Response) {
     const body = req.body;
     const purchaseOrder: PurchaseOrderModel = body;    
-   
+       
     const commodityIDList: number[] = body.commodity_id;
     const quantityList: number[] = body.quantity;
     const unitPriceList: number[] = body.unit_price;
@@ -88,38 +114,15 @@ export async function createPurchaseOrder(req: Request, res: Response) {
         await checkIfProviderAndEmployeeExists(res, purchaseOrder.provider_id, purchaseOrder.employee_id);
 
         let insertOrder = '';
-        if(purchaseOrder.expected_date == null || purchaseOrder.expected_date == '') {      
-            if(purchaseOrder.receive_date == null || purchaseOrder.receive_date == '') {
-                insertOrder = `INSERT INTO purchase_order (provider_id, employee_id, order_date, 
-                    total_price, message, state) VALUES (${purchaseOrder.provider_id}, ${purchaseOrder.employee_id}, 
-                        "${purchaseOrder.order_date}", ${purchaseOrder.total_price}, "${purchaseOrder.message}", ${purchaseOrder.state})`;
-            }else {                                
-                insertOrder = `INSERT INTO purchase_order (provider_id, employee_id, order_date, receive_date, 
-                    total_price, message, state) VALUES (${purchaseOrder.provider_id}, ${purchaseOrder.employee_id}, 
-                        "${purchaseOrder.order_date}", "${purchaseOrder.receive_date}", ${purchaseOrder.total_price}, "${purchaseOrder.message}", ${purchaseOrder.state})`;
-            }      
-        
-        }else if(purchaseOrder.receive_date == null || purchaseOrder.receive_date == ''){
-            if(purchaseOrder.expected_date == null || purchaseOrder.expected_date == '') { 
-                insertOrder = `INSERT INTO purchase_order (provider_id, employee_id, order_date, 
-                    total_price, message, state) VALUES (${purchaseOrder.provider_id}, ${purchaseOrder.employee_id}, 
-                        "${purchaseOrder.order_date}", ${purchaseOrder.total_price}, "${purchaseOrder.message}", ${purchaseOrder.state})`;
-            }else{
-                insertOrder = `INSERT INTO purchase_order (provider_id, employee_id, order_date, expected_date, 
-                    total_price, message, state) VALUES (${purchaseOrder.provider_id}, ${purchaseOrder.employee_id}, 
-                        "${purchaseOrder.order_date}", "${purchaseOrder.expected_date}", "${purchaseOrder.receive_date}", ${purchaseOrder.total_price}, "${purchaseOrder.message}", ${purchaseOrder.state})`;
-            }
-        
-        } else {
-            insertOrder = `INSERT INTO purchase_order (provider_id, employee_id, order_date, expected_date, 
-                receive_date, total_price, message, state) VALUES (${purchaseOrder.provider_id}, ${purchaseOrder.employee_id}, 
-                    "${purchaseOrder.order_date}", "${purchaseOrder.expected_date}", "${purchaseOrder.receive_date}", 
-                    ${purchaseOrder.total_price}, "${purchaseOrder.message}", ${purchaseOrder.state})`;
-        }        
+  
+        insertOrder = `INSERT INTO purchase_order (provider_id, employee_id, order_date, expected_date, 
+            receive_date, paid_date, total_price, message, state) VALUES (${purchaseOrder.provider_id}, ${purchaseOrder.employee_id}, 
+                "${purchaseOrder.order_date}", NULLIF('${purchaseOrder.expected_date}', 'null'), NULLIF('${purchaseOrder.receive_date}', 'null'), 
+                NULLIF('${purchaseOrder.paid_date}', 'null'), ${purchaseOrder.total_price}, "${purchaseOrder.message}", ${purchaseOrder.state})`;
 
 
          return await query(insertOrder).then(async createOrderData => {
-            if(!createOrderData.ok) return res.status(createOrderData.status).json({ok: false, message: createOrderData.message});
+            if(!createOrderData.ok) {console.log(createOrderData.message); return res.status(createOrderData.status).json({ok: false, message: createOrderData.message});}
 
            const purchaseOrderID = createOrderData.result[0].insertId;
     
@@ -171,38 +174,10 @@ export async function updatePurchaseOrder(req: Request, res: Response) {
         await checkIfProviderAndEmployeeExists(res, purchaseOrder.provider_id, purchaseOrder.updated_by);
         
         let updateQuery = '';
-        if(purchaseOrder.expected_date == null || purchaseOrder.expected_date == '') {      
-            if(purchaseOrder.receive_date == null || purchaseOrder.receive_date == '') {
-                updateQuery = `UPDATE purchase_order SET provider_id=${purchaseOrder.provider_id}, 
-                order_date="${purchaseOrder.order_date}", expected_date=${null}, receive_date=${null}, 
-                total_price=${purchaseOrder.total_price}, updated_by=${purchaseOrder.updated_by}, 
-                message="${purchaseOrder.message}", state=${purchaseOrder.state} WHERE purchase_order_id = ${purchaseOrderID}`;             
-
-            }else {       
-                updateQuery = `UPDATE purchase_order SET provider_id=${purchaseOrder.provider_id}, 
-                order_date="${purchaseOrder.order_date}", receive_date="${purchaseOrder.receive_date}", 
-                expected_date=${null}, total_price=${purchaseOrder.total_price}, updated_by=${purchaseOrder.updated_by},
-                message="${purchaseOrder.message}", state=${purchaseOrder.state} WHERE purchase_order_id = ${purchaseOrderID}`;             
-            }      
-        
-        }else if(purchaseOrder.receive_date == null || purchaseOrder.receive_date == ''){
-            if(purchaseOrder.expected_date == null || purchaseOrder.expected_date == '') { 
-                updateQuery = `UPDATE purchase_order SET provider_id=${purchaseOrder.provider_id}, 
-                order_date="${purchaseOrder.order_date}", expected_date=${null}, receive_date=${null},
-                total_price=${purchaseOrder.total_price}, updated_by=${purchaseOrder.updated_by},  
-                message="${purchaseOrder.message}", state=${purchaseOrder.state} WHERE purchase_order_id = ${purchaseOrderID}`;                
-            }else{
-                updateQuery = `UPDATE purchase_order SET provider_id=${purchaseOrder.provider_id}, 
-                order_date="${purchaseOrder.order_date}", expected_date="${purchaseOrder.expected_date}", 
-                receive_date=${null}, total_price=${purchaseOrder.total_price}, updated_by=${purchaseOrder.updated_by},
-                message="${purchaseOrder.message}", state=${purchaseOrder.state} WHERE purchase_order_id = ${purchaseOrderID}`;  
-            }
-        
-        } else {
-            updateQuery = `UPDATE purchase_order SET provider_id=${purchaseOrder.provider_id}, order_date="${purchaseOrder.order_date}", 
-            expected_date="${purchaseOrder.expected_date}", receive_date="${purchaseOrder.receive_date}", total_price=${purchaseOrder.total_price}, 
-            updated_by=${purchaseOrder.updated_by}, message="${purchaseOrder.message}", state=${purchaseOrder.state} WHERE purchase_order_id = ${purchaseOrderID}`; 
-        }        
+        updateQuery = `UPDATE purchase_order SET provider_id=${purchaseOrder.provider_id}, order_date="${purchaseOrder.order_date}",
+            expected_date = NULLIF('${purchaseOrder.expected_date}', 'null'), receive_date = NULLIF('${purchaseOrder.receive_date}', 'null'), 
+           paid_date= NULLIF('${purchaseOrder.paid_date}', 'null'),  total_price=${purchaseOrder.total_price}, 
+            updated_by=${purchaseOrder.updated_by}, message="${purchaseOrder.message}", state=${purchaseOrder.state} WHERE purchase_order_id = ${purchaseOrderID}`;       
     
         return await query(updateQuery).then(async data => {
             if(!data.ok) return res.status(data.status).json({ok: false, message: data.message});
@@ -246,15 +221,15 @@ async function checkIfProviderAndEmployeeExists(res: Response, providerID: Numbe
 
 export async function getPurchaseOrdersWithState(req: Request, res: Response){
     const offset = Number(req.query.offset);
-    const state = Number(req.query.state);
+    const state = Number(req.params.state);
 
     if(Number.isNaN(offset)) return res.status(404).json({ok: false, message: `La variable 'offset' es obligatorio!`});
 
     try {
         const getQuery = `SELECT purchase_order_id, provider_id, 
         (SELECT name FROM provider WHERE provider_id = po.provider_id)provider_name, 
-        employee_id, (SELECT name FROM employee WHERE employee_id = po.employee_id)employee_name, 
-        order_date, expected_date, receive_date, total_price, message, updated_by, 
+        employee_id, (SELECT username FROM employee WHERE employee_id = po.employee_id)employee_name, 
+        order_date, expected_date, receive_date, paid_date, total_price, message, updated_by, 
         (SELECT name FROM employee WHERE employee_id = po.updated_by)updated_name,
         state FROM purchase_order po WHERE state = ${state} ORDER BY order_date DESC LIMIT 20`;
 
@@ -263,16 +238,43 @@ export async function getPurchaseOrdersWithState(req: Request, res: Response){
                 if (!isNaN(data.result[0][i].order_date)) {
                     var orderDate = new Date(data.result[0][i].order_date);
                     data.result[0][i].order_date = dateformat(orderDate, 'yyyy-mm-dd hh:MM:ss');
+                    if( data.result[0][i].order_date == '1969-12-31 07:00:00') {
+                        data.result[0][i].order_date = null;                       
+                    }
+                   
+                }else{
+                    data.result[0][i].order_date = null;
                 }
 
                 if (!isNaN(data.result[0][i].expected_date)){
                     var expectedDate = new Date(data.result[0][i].expected_date);
                     data.result[0][i].expected_date = dateformat(expectedDate, 'yyyy-mm-dd hh:MM:ss');
+                    if( data.result[0][i].expected_date == '1969-12-31 07:00:00') {
+                        data.result[0][i].expected_date = null;
+                    }                
+                }else{
+                    data.result[0][i].expected_date = null;
                 }
 
                 if (!isNaN(data.result[0][i].receive_date)) {
-                    var receiveDate = new Date(data.result[0][i].receive_date);    
+                    var receiveDate = new Date(data.result[0][i].receive_date); 
                     data.result[0][i].receive_date = dateformat(receiveDate, 'yyyy-mm-dd hh:MM:ss');
+                    if(data.result[0][i].receive_date == '1969-12-31 07:00:00') {
+                        data.result[0][i].receive_date = null;
+                    }               
+                }else{
+                    data.result[0][i].receive_date = null;
+                }
+
+                if (!isNaN(data.result[0][i].paid_date)) {
+                    var paidDate = new Date(data.result[0][i].paid_date);    
+                    data.result[0][i].paid_date = dateformat(paidDate, 'yyyy-mm-dd hh:MM:ss');
+                    if(data.result[0][i].paid_date == '1969-12-31 07:00:00') {
+                        data.result[0][i].paid_date = null;
+                    }
+                   
+                }else{
+                    data.result[0][i].paid_date = null;
                 }
             }
             if(!data.ok) return res.status(data.status).json({ok: false, message: data.message})

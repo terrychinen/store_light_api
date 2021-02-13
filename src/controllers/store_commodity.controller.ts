@@ -87,6 +87,34 @@ export async function updateStoreCommodity(req: Request, res: Response) {
         return res.status(500).json({ok: false, message: error});
     }   
 }
+
+
+
+
+
+
+//================== OBTENER TODAS LAS MERCANCIAS POR EL ID DEL ALMACEN ==================//
+export async function getCommoditiesByStoreID(req: Request, res: Response){
+    const storeID = Number(req.params.store_id);
+    const search = req.body.search;
+    const offset = Number(req.body.offset);
+    const state = Number(req.body.state);
+
+    if(Number.isNaN(offset) || Number.isNaN(state)) return res.status(404).json({ok: false, message: `La variable 'offset' y 'state' son obligatorio!`});
+
+    try {
+        const getQuery = `SELECT sc.commodity_id, (c.name)commodity_name, sc.stock, sc.state FROM store_commodity sc 
+            INNER JOIN commodity c ON c.commodity_id = sc.commodity_id WHERE store_id = ${storeID} AND c.name LIKE '%${search}%' LIMIT 10`;
+        
+        return await query(getQuery).then(data => {
+            if(!data.ok) return res.status(data.status).json({ok: false, message: data.message})                                
+            
+            return res.status(data.status).json({ok: true, message: data.message, result: data.result[0]});
+        });
+    }catch(error) {
+        return res.status(500).json({ok: false, message: error});
+    }
+}
    
 
 

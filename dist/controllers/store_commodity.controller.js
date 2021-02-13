@@ -36,7 +36,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateStoreCommodity = exports.createStoreCommodity = exports.getStoresCommodities = void 0;
+exports.getCommoditiesByStoreID = exports.updateStoreCommodity = exports.createStoreCommodity = exports.getStoresCommodities = void 0;
 var query_1 = require("../query/query");
 //================== OBTENER TODAS LOS ALMACENES-MERCANCIAS ==================//
 function getStoresCommodities(req, res) {
@@ -144,6 +144,38 @@ function updateStoreCommodity(req, res) {
     });
 }
 exports.updateStoreCommodity = updateStoreCommodity;
+//================== OBTENER TODAS LAS MERCANCIAS POR EL ID DEL ALMACEN ==================//
+function getCommoditiesByStoreID(req, res) {
+    return __awaiter(this, void 0, void 0, function () {
+        var storeID, search, offset, state, getQuery, error_4;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    storeID = Number(req.params.store_id);
+                    search = req.body.search;
+                    offset = Number(req.body.offset);
+                    state = Number(req.body.state);
+                    if (Number.isNaN(offset) || Number.isNaN(state))
+                        return [2 /*return*/, res.status(404).json({ ok: false, message: "La variable 'offset' y 'state' son obligatorio!" })];
+                    _a.label = 1;
+                case 1:
+                    _a.trys.push([1, 3, , 4]);
+                    getQuery = "SELECT sc.commodity_id, (c.name)commodity_name, sc.stock, sc.state FROM store_commodity sc \n            INNER JOIN commodity c ON c.commodity_id = sc.commodity_id WHERE store_id = " + storeID + " AND c.name LIKE '%" + search + "%' LIMIT 10";
+                    return [4 /*yield*/, query_1.query(getQuery).then(function (data) {
+                            if (!data.ok)
+                                return res.status(data.status).json({ ok: false, message: data.message });
+                            return res.status(data.status).json({ ok: true, message: data.message, result: data.result[0] });
+                        })];
+                case 2: return [2 /*return*/, _a.sent()];
+                case 3:
+                    error_4 = _a.sent();
+                    return [2 /*return*/, res.status(500).json({ ok: false, message: error_4 })];
+                case 4: return [2 /*return*/];
+            }
+        });
+    });
+}
+exports.getCommoditiesByStoreID = getCommoditiesByStoreID;
 function checkIfCommodityAndStoreExists(res, commodityID, storeID) {
     return __awaiter(this, void 0, void 0, function () {
         var checkIfCommodityExists, checkIfStoreExists;

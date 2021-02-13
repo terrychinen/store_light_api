@@ -9,6 +9,6 @@ router.route('/')
 router.route('/:purchase_id')
     .get(purcharse_order_1.getPurchaseOrderDetail)
     .put(purcharse_order_1.updatePurchaseOrder);
-router.route('/with_state')
+router.route('/with_state/:state')
     .get(purcharse_order_1.getPurchaseOrdersWithState);
 exports.default = router;

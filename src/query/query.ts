@@ -15,6 +15,7 @@ export async function query(queryString: string) {
             message: 'Query successful',
             result: query
         });
+       
 
     }catch(e){return ({ok: false, status: 500, message: e.toString(), result: []});}
 }

@@ -18,6 +18,8 @@ var environment_routes_1 = __importDefault(require("./routes/environment.routes"
 var employee_routes_1 = __importDefault(require("./routes/employee.routes"));
 var store_commodity_routes_1 = __importDefault(require("./routes/store_commodity.routes"));
 var purchase_order_routes_1 = __importDefault(require("./routes/purchase_order.routes"));
+var input_routes_1 = __importDefault(require("./routes/input.routes"));
+var output_routes_1 = __importDefault(require("./routes/output.routes"));
 var App = /** @class */ (function () {
     function App(port) {
         this.app = express_1.default();
@@ -51,6 +53,8 @@ var App = /** @class */ (function () {
         this.app.use('/employee', employee_routes_1.default);
         this.app.use('/store_commodity', store_commodity_routes_1.default);
         this.app.use('/purchase_order', purchase_order_routes_1.default);
+        this.app.use('/input', input_routes_1.default);
+        this.app.use('/output', output_routes_1.default);
     };
     return App;
 }());

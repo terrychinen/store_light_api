@@ -55,20 +55,48 @@ function getPurchaseOrders(req, res) {
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
-                    getQuery = "SELECT purchase_order_id, provider_id, \n        (SELECT name FROM provider WHERE provider_id = po.provider_id)provider_name, \n        employee_id, (SELECT name FROM employee WHERE employee_id = po.employee_id)employee_name, \n        order_date, expected_date, receive_date, total_price, message, updated_by, \n        (SELECT name FROM employee WHERE employee_id = po.updated_by)updated_name,\n        state FROM purchase_order po ORDER BY state ASC, order_date DESC LIMIT 20";
+                    getQuery = "SELECT purchase_order_id, provider_id, \n        (SELECT name FROM provider WHERE provider_id = po.provider_id)provider_name, \n        employee_id, (SELECT username FROM employee WHERE employee_id = po.employee_id)employee_name, \n        order_date, expected_date, receive_date, paid_date, total_price, message, updated_by, \n        (SELECT name FROM employee WHERE employee_id = po.updated_by)updated_name,\n        state FROM purchase_order po ORDER BY state ASC, order_date DESC LIMIT 20";
                     return [4 /*yield*/, query_1.query(getQuery).then(function (data) {
                             for (var i = 0; i < data.result[0].length; i++) {
                                 if (!isNaN(data.result[0][i].order_date)) {
                                     var orderDate = new Date(data.result[0][i].order_date);
                                     data.result[0][i].order_date = dateformat_1.default(orderDate, 'yyyy-mm-dd hh:MM:ss');
+                                    if (data.result[0][i].order_date == '1969-12-31 07:00:00') {
+                                        data.result[0][i].order_date = null;
+                                    }
+                                }
+                                else {
+                                    data.result[0][i].order_date = null;
                                 }
                                 if (!isNaN(data.result[0][i].expected_date)) {
                                     var expectedDate = new Date(data.result[0][i].expected_date);
                                     data.result[0][i].expected_date = dateformat_1.default(expectedDate, 'yyyy-mm-dd hh:MM:ss');
+                                    if (data.result[0][i].expected_date == '1969-12-31 07:00:00') {
+                                        data.result[0][i].expected_date = null;
+                                    }
+                                }
+                                else {
+                                    data.result[0][i].expected_date = null;
                                 }
                                 if (!isNaN(data.result[0][i].receive_date)) {
                                     var receiveDate = new Date(data.result[0][i].receive_date);
                                     data.result[0][i].receive_date = dateformat_1.default(receiveDate, 'yyyy-mm-dd hh:MM:ss');
+                                    if (data.result[0][i].receive_date == '1969-12-31 07:00:00') {
+                                        data.result[0][i].receive_date = null;
+                                    }
+                                }
+                                else {
+                                    data.result[0][i].receive_date = null;
+                                }
+                                if (!isNaN(data.result[0][i].paid_date)) {
+                                    var paidDate = new Date(data.result[0][i].paid_date);
+                                    data.result[0][i].paid_date = dateformat_1.default(paidDate, 'yyyy-mm-dd hh:MM:ss');
+                                    if (data.result[0][i].paid_date == '1969-12-31 07:00:00') {
+                                        data.result[0][i].paid_date = null;
+                                    }
+                                }
+                                else {
+                                    data.result[0][i].paid_date = null;
                                 }
                             }
                             if (!data.ok)
@@ -141,32 +169,16 @@ function createPurchaseOrder(req, res) {
                 case 2:
                     _a.sent();
                     insertOrder = '';
-                    if (purchaseOrder.expected_date == null || purchaseOrder.expected_date == '') {
-                        if (purchaseOrder.receive_date == null || purchaseOrder.receive_date == '') {
-                            insertOrder = "INSERT INTO purchase_order (provider_id, employee_id, order_date, \n                    total_price, message, state) VALUES (" + purchaseOrder.provider_id + ", " + purchaseOrder.employee_id + ", \n                        \"" + purchaseOrder.order_date + "\", " + purchaseOrder.total_price + ", \"" + purchaseOrder.message + "\", " + purchaseOrder.state + ")";
-                        }
-                        else {
-                            insertOrder = "INSERT INTO purchase_order (provider_id, employee_id, order_date, receive_date, \n                    total_price, message, state) VALUES (" + purchaseOrder.provider_id + ", " + purchaseOrder.employee_id + ", \n                        \"" + purchaseOrder.order_date + "\", \"" + purchaseOrder.receive_date + "\", " + purchaseOrder.total_price + ", \"" + purchaseOrder.message + "\", " + purchaseOrder.state + ")";
-                        }
-                    }
-                    else if (purchaseOrder.receive_date == null || purchaseOrder.receive_date == '') {
-                        if (purchaseOrder.expected_date == null || purchaseOrder.expected_date == '') {
-                            insertOrder = "INSERT INTO purchase_order (provider_id, employee_id, order_date, \n                    total_price, message, state) VALUES (" + purchaseOrder.provider_id + ", " + purchaseOrder.employee_id + ", \n                        \"" + purchaseOrder.order_date + "\", " + purchaseOrder.total_price + ", \"" + purchaseOrder.message + "\", " + purchaseOrder.state + ")";
-                        }
-                        else {
-                            insertOrder = "INSERT INTO purchase_order (provider_id, employee_id, order_date, expected_date, \n                    total_price, message, state) VALUES (" + purchaseOrder.provider_id + ", " + purchaseOrder.employee_id + ", \n                        \"" + purchaseOrder.order_date + "\", \"" + purchaseOrder.expected_date + "\", \"" + purchaseOrder.receive_date + "\", " + purchaseOrder.total_price + ", \"" + purchaseOrder.message + "\", " + purchaseOrder.state + ")";
-                        }
-                    }
-                    else {
-                        insertOrder = "INSERT INTO purchase_order (provider_id, employee_id, order_date, expected_date, \n                receive_date, total_price, message, state) VALUES (" + purchaseOrder.provider_id + ", " + purchaseOrder.employee_id + ", \n                    \"" + purchaseOrder.order_date + "\", \"" + purchaseOrder.expected_date + "\", \"" + purchaseOrder.receive_date + "\", \n                    " + purchaseOrder.total_price + ", \"" + purchaseOrder.message + "\", " + purchaseOrder.state + ")";
-                    }
+                    insertOrder = "INSERT INTO purchase_order (provider_id, employee_id, order_date, expected_date, \n            receive_date, paid_date, total_price, message, state) VALUES (" + purchaseOrder.provider_id + ", " + purchaseOrder.employee_id + ", \n                \"" + purchaseOrder.order_date + "\", NULLIF('" + purchaseOrder.expected_date + "', 'null'), NULLIF('" + purchaseOrder.receive_date + "', 'null'), \n                NULLIF('" + purchaseOrder.paid_date + "', 'null'), " + purchaseOrder.total_price + ", \"" + purchaseOrder.message + "\", " + purchaseOrder.state + ")";
                     return [4 /*yield*/, query_1.query(insertOrder).then(function (createOrderData) { return __awaiter(_this, void 0, void 0, function () {
                             var purchaseOrderID, i, insertOrderDetail;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
                                     case 0:
-                                        if (!createOrderData.ok)
+                                        if (!createOrderData.ok) {
+                                            console.log(createOrderData.message);
                                             return [2 /*return*/, res.status(createOrderData.status).json({ ok: false, message: createOrderData.message })];
+                                        }
                                         purchaseOrderID = createOrderData.result[0].insertId;
                                         i = 0;
                                         _a.label = 1;
@@ -224,25 +236,7 @@ function updatePurchaseOrder(req, res) {
                 case 2:
                     _a.sent();
                     updateQuery = '';
-                    if (purchaseOrder.expected_date == null || purchaseOrder.expected_date == '') {
-                        if (purchaseOrder.receive_date == null || purchaseOrder.receive_date == '') {
-                            updateQuery = "UPDATE purchase_order SET provider_id=" + purchaseOrder.provider_id + ", \n                order_date=\"" + purchaseOrder.order_date + "\", expected_date=" + null + ", receive_date=" + null + ", \n                total_price=" + purchaseOrder.total_price + ", updated_by=" + purchaseOrder.updated_by + ", \n                message=\"" + purchaseOrder.message + "\", state=" + purchaseOrder.state + " WHERE purchase_order_id = " + purchaseOrderID;
-                        }
-                        else {
-                            updateQuery = "UPDATE purchase_order SET provider_id=" + purchaseOrder.provider_id + ", \n                order_date=\"" + purchaseOrder.order_date + "\", receive_date=\"" + purchaseOrder.receive_date + "\", \n                expected_date=" + null + ", total_price=" + purchaseOrder.total_price + ", updated_by=" + purchaseOrder.updated_by + ",\n                message=\"" + purchaseOrder.message + "\", state=" + purchaseOrder.state + " WHERE purchase_order_id = " + purchaseOrderID;
-                        }
-                    }
-                    else if (purchaseOrder.receive_date == null || purchaseOrder.receive_date == '') {
-                        if (purchaseOrder.expected_date == null || purchaseOrder.expected_date == '') {
-                            updateQuery = "UPDATE purchase_order SET provider_id=" + purchaseOrder.provider_id + ", \n                order_date=\"" + purchaseOrder.order_date + "\", expected_date=" + null + ", receive_date=" + null + ",\n                total_price=" + purchaseOrder.total_price + ", updated_by=" + purchaseOrder.updated_by + ",  \n                message=\"" + purchaseOrder.message + "\", state=" + purchaseOrder.state + " WHERE purchase_order_id = " + purchaseOrderID;
-                        }
-                        else {
-                            updateQuery = "UPDATE purchase_order SET provider_id=" + purchaseOrder.provider_id + ", \n                order_date=\"" + purchaseOrder.order_date + "\", expected_date=\"" + purchaseOrder.expected_date + "\", \n                receive_date=" + null + ", total_price=" + purchaseOrder.total_price + ", updated_by=" + purchaseOrder.updated_by + ",\n                message=\"" + purchaseOrder.message + "\", state=" + purchaseOrder.state + " WHERE purchase_order_id = " + purchaseOrderID;
-                        }
-                    }
-                    else {
-                        updateQuery = "UPDATE purchase_order SET provider_id=" + purchaseOrder.provider_id + ", order_date=\"" + purchaseOrder.order_date + "\", \n            expected_date=\"" + purchaseOrder.expected_date + "\", receive_date=\"" + purchaseOrder.receive_date + "\", total_price=" + purchaseOrder.total_price + ", \n            updated_by=" + purchaseOrder.updated_by + ", message=\"" + purchaseOrder.message + "\", state=" + purchaseOrder.state + " WHERE purchase_order_id = " + purchaseOrderID;
-                    }
+                    updateQuery = "UPDATE purchase_order SET provider_id=" + purchaseOrder.provider_id + ", order_date=\"" + purchaseOrder.order_date + "\",\n            expected_date = NULLIF('" + purchaseOrder.expected_date + "', 'null'), receive_date = NULLIF('" + purchaseOrder.receive_date + "', 'null'), \n           paid_date= NULLIF('" + purchaseOrder.paid_date + "', 'null'),  total_price=" + purchaseOrder.total_price + ", \n            updated_by=" + purchaseOrder.updated_by + ", message=\"" + purchaseOrder.message + "\", state=" + purchaseOrder.state + " WHERE purchase_order_id = " + purchaseOrderID;
                     return [4 /*yield*/, query_1.query(updateQuery).then(function (data) { return __awaiter(_this, void 0, void 0, function () {
                             var deleteQuery, i, insertOrderDetail;
                             return __generator(this, function (_a) {
@@ -309,26 +303,54 @@ function getPurchaseOrdersWithState(req, res) {
             switch (_a.label) {
                 case 0:
                     offset = Number(req.query.offset);
-                    state = Number(req.query.state);
+                    state = Number(req.params.state);
                     if (Number.isNaN(offset))
                         return [2 /*return*/, res.status(404).json({ ok: false, message: "La variable 'offset' es obligatorio!" })];
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
-                    getQuery = "SELECT purchase_order_id, provider_id, \n        (SELECT name FROM provider WHERE provider_id = po.provider_id)provider_name, \n        employee_id, (SELECT name FROM employee WHERE employee_id = po.employee_id)employee_name, \n        order_date, expected_date, receive_date, total_price, message, updated_by, \n        (SELECT name FROM employee WHERE employee_id = po.updated_by)updated_name,\n        state FROM purchase_order po WHERE state = " + state + " ORDER BY order_date DESC LIMIT 20";
+                    getQuery = "SELECT purchase_order_id, provider_id, \n        (SELECT name FROM provider WHERE provider_id = po.provider_id)provider_name, \n        employee_id, (SELECT username FROM employee WHERE employee_id = po.employee_id)employee_name, \n        order_date, expected_date, receive_date, paid_date, total_price, message, updated_by, \n        (SELECT name FROM employee WHERE employee_id = po.updated_by)updated_name,\n        state FROM purchase_order po WHERE state = " + state + " ORDER BY order_date DESC LIMIT 20";
                     return [4 /*yield*/, query_1.query(getQuery).then(function (data) {
                             for (var i = 0; i < data.result[0].length; i++) {
                                 if (!isNaN(data.result[0][i].order_date)) {
                                     var orderDate = new Date(data.result[0][i].order_date);
                                     data.result[0][i].order_date = dateformat_1.default(orderDate, 'yyyy-mm-dd hh:MM:ss');
+                                    if (data.result[0][i].order_date == '1969-12-31 07:00:00') {
+                                        data.result[0][i].order_date = null;
+                                    }
+                                }
+                                else {
+                                    data.result[0][i].order_date = null;
                                 }
                                 if (!isNaN(data.result[0][i].expected_date)) {
                                     var expectedDate = new Date(data.result[0][i].expected_date);
                                     data.result[0][i].expected_date = dateformat_1.default(expectedDate, 'yyyy-mm-dd hh:MM:ss');
+                                    if (data.result[0][i].expected_date == '1969-12-31 07:00:00') {
+                                        data.result[0][i].expected_date = null;
+                                    }
+                                }
+                                else {
+                                    data.result[0][i].expected_date = null;
                                 }
                                 if (!isNaN(data.result[0][i].receive_date)) {
                                     var receiveDate = new Date(data.result[0][i].receive_date);
                                     data.result[0][i].receive_date = dateformat_1.default(receiveDate, 'yyyy-mm-dd hh:MM:ss');
+                                    if (data.result[0][i].receive_date == '1969-12-31 07:00:00') {
+                                        data.result[0][i].receive_date = null;
+                                    }
+                                }
+                                else {
+                                    data.result[0][i].receive_date = null;
+                                }
+                                if (!isNaN(data.result[0][i].paid_date)) {
+                                    var paidDate = new Date(data.result[0][i].paid_date);
+                                    data.result[0][i].paid_date = dateformat_1.default(paidDate, 'yyyy-mm-dd hh:MM:ss');
+                                    if (data.result[0][i].paid_date == '1969-12-31 07:00:00') {
+                                        data.result[0][i].paid_date = null;
+                                    }
+                                }
+                                else {
+                                    data.result[0][i].paid_date = null;
                                 }
                             }
                             if (!data.ok)

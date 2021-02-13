@@ -14,6 +14,8 @@ import EnvironmentRoutes from './routes/environment.routes';
 import EmployeeRoutes from './routes/employee.routes';
 import StoreCommodityRoutes from './routes/store_commodity.routes';
 import PurchaseOrderRoutes from './routes/purchase_order.routes';
+import InputRoutes from './routes/input.routes';
+import OutputRoutes from './routes/output.routes';
 
 export class App {
     private app: Application;
@@ -57,5 +59,7 @@ export class App {
         this.app.use('/employee', EmployeeRoutes);
         this.app.use('/store_commodity', StoreCommodityRoutes);         
         this.app.use('/purchase_order', PurchaseOrderRoutes);         
+        this.app.use('/input', InputRoutes);
+        this.app.use('/output', OutputRoutes);         
     }
 }
