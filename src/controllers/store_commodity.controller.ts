@@ -11,10 +11,12 @@ export async function getStoresCommodities(req: Request, res: Response){
     if(Number.isNaN(offset) || Number.isNaN(state)) return res.status(404).json({ok: false, message: `La variable 'offset' y 'state' son obligatorio!`});
 
     try {
-        const getQuery = `SELECT sc.store_id, (SELECT name FROM store WHERE store_id = sc.store_id)store_name, 
-        sc.commodity_id, (SELECT name FROM commodity WHERE commodity_id = sc.commodity_id)commodity_name, 
-        sc.stock, (SELECT SUM(stock) FROM store_commodity WHERE commodity_id = sc.commodity_id)stock_total, 
-        sc.state FROM store_commodity sc LIMIT 20`;
+        const getQuery = `SELECT sc.store_id, (s.name)store_name, sc.commodity_id, (c.name)commodity_name, sc.stock, 
+		    (SELECT SUM(stock) FROM store_commodity WHERE commodity_id = sc.commodity_id)stock_total,
+            sc.state FROM store_commodity sc
+            INNER JOIN store s ON s.store_id = sc.store_id
+            INNER JOIN commodity c ON c.commodity_id = sc.commodity_id
+            ORDER BY s.name ASC, c.name ASC`;
         
         return await query(getQuery).then(data => {
             if(!data.ok) return res.status(data.status).json({ok: false, message: data.message})
@@ -118,6 +120,24 @@ export async function getCommoditiesByStoreID(req: Request, res: Response){
    
 
 
+//================== OBTENER TODAS LAS MERCANCIAS POR EL ID DEL ALMACEN Y DEL ID DE LA MERCANCIA==================//
+export async function getCommodityByStoreIDAndCommdotyId(req: Request, res: Response){
+    const storeID = Number(req.params.store_id);
+    const commodityID = Number(req.params.commodity_id);
+
+    try {
+        const getQuery = `SELECT stock FROM store_commodity WHERE store_id = ${storeID} AND commodity_id = ${commodityID} LIMIT 1`;
+        
+        return await query(getQuery).then(data => {
+            if(!data.ok) return res.status(data.status).json({ok: false, message: data.message})                                
+            
+            return res.status(data.status).json({ok: true, message: data.message, result: data.result[0]});
+        });
+    }catch(error) {
+        return res.status(500).json({ok: false, message: error});
+    }
+}
+   
 
 
 async function checkIfCommodityAndStoreExists(res: Response, commodityID: Number, storeID: Number) {

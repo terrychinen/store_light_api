@@ -14,7 +14,7 @@ router.route('/:purchase_id')
     .put(updatePurchaseOrder);   
 
 
-router.route('/with_state/:state')
+router.route('/with/state')
     .get(getPurchaseOrdersWithState);
 
 

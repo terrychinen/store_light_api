@@ -36,7 +36,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getCommoditiesByStoreID = exports.updateStoreCommodity = exports.createStoreCommodity = exports.getStoresCommodities = void 0;
+exports.getCommodityByStoreIDAndCommdotyId = exports.getCommoditiesByStoreID = exports.updateStoreCommodity = exports.createStoreCommodity = exports.getStoresCommodities = void 0;
 var query_1 = require("../query/query");
 //================== OBTENER TODAS LOS ALMACENES-MERCANCIAS ==================//
 function getStoresCommodities(req, res) {
@@ -52,7 +52,7 @@ function getStoresCommodities(req, res) {
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
-                    getQuery = "SELECT sc.store_id, (SELECT name FROM store WHERE store_id = sc.store_id)store_name, \n        sc.commodity_id, (SELECT name FROM commodity WHERE commodity_id = sc.commodity_id)commodity_name, \n        sc.stock, (SELECT SUM(stock) FROM store_commodity WHERE commodity_id = sc.commodity_id)stock_total, \n        sc.state FROM store_commodity sc LIMIT 20";
+                    getQuery = "SELECT sc.store_id, (s.name)store_name, sc.commodity_id, (c.name)commodity_name, sc.stock, \n\t\t    (SELECT SUM(stock) FROM store_commodity WHERE commodity_id = sc.commodity_id)stock_total,\n            sc.state FROM store_commodity sc\n            INNER JOIN store s ON s.store_id = sc.store_id\n            INNER JOIN commodity c ON c.commodity_id = sc.commodity_id\n            ORDER BY s.name ASC, c.name ASC";
                     return [4 /*yield*/, query_1.query(getQuery).then(function (data) {
                             if (!data.ok)
                                 return res.status(data.status).json({ ok: false, message: data.message });
@@ -176,6 +176,34 @@ function getCommoditiesByStoreID(req, res) {
     });
 }
 exports.getCommoditiesByStoreID = getCommoditiesByStoreID;
+//================== OBTENER TODAS LAS MERCANCIAS POR EL ID DEL ALMACEN Y DEL ID DE LA MERCANCIA==================//
+function getCommodityByStoreIDAndCommdotyId(req, res) {
+    return __awaiter(this, void 0, void 0, function () {
+        var storeID, commodityID, getQuery, error_5;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    storeID = Number(req.params.store_id);
+                    commodityID = Number(req.params.commodity_id);
+                    _a.label = 1;
+                case 1:
+                    _a.trys.push([1, 3, , 4]);
+                    getQuery = "SELECT stock FROM store_commodity WHERE store_id = " + storeID + " AND commodity_id = " + commodityID + " LIMIT 1";
+                    return [4 /*yield*/, query_1.query(getQuery).then(function (data) {
+                            if (!data.ok)
+                                return res.status(data.status).json({ ok: false, message: data.message });
+                            return res.status(data.status).json({ ok: true, message: data.message, result: data.result[0] });
+                        })];
+                case 2: return [2 /*return*/, _a.sent()];
+                case 3:
+                    error_5 = _a.sent();
+                    return [2 /*return*/, res.status(500).json({ ok: false, message: error_5 })];
+                case 4: return [2 /*return*/];
+            }
+        });
+    });
+}
+exports.getCommodityByStoreIDAndCommdotyId = getCommodityByStoreIDAndCommdotyId;
 function checkIfCommodityAndStoreExists(res, commodityID, storeID) {
     return __awaiter(this, void 0, void 0, function () {
         var checkIfCommodityExists, checkIfStoreExists;

@@ -43,21 +43,113 @@ export async function createOutput(req: Request, res: Response) {
     const output: OutputModel = req.body;
 
     if(Number.isNaN(output.store_id) || Number.isNaN(output.commodity_id) || Number.isNaN(output.environment_id)
-        || Number.isNaN(output.quantity) || Number.isNaN(output.employee_gives)
-        || Number.isNaN(output.employee_receives) || output.date_output == null 
-        || Number.isNaN(output.state)) return res.status(404).json({ok: false, message: `La variable 'name' y 'state' son obligatorio!`});
-
+    || Number.isNaN(output.quantity) || Number.isNaN(output.employee_gives)
+    || Number.isNaN(output.employee_receives) || output.date_output == null 
+    || Number.isNaN(output.state)) return res.status(404).json({ok: false, message: `La variable 'name' y 'state' son obligatorio!`});   
+    
     try {        
         const insertQuery = `INSERT INTO output (store_id, commodity_id, environment_id, quantity, 
             employee_gives, employee_receives, date_output, notes, state) 
             VALUES (${output.store_id}, ${output.commodity_id}, ${output.environment_id}, ${output.quantity},
                     ${output.employee_gives}, ${output.employee_receives}, "${output.date_output}", "${output.notes}", ${output.state})`;
-    
-        return await query(insertQuery).then(data => {
-            if(!data.ok) return res.status(data.status).json({ok: false, message: data.message})
-            return res.status(data.status).json({ok: true, message: 'Salida creado correctamente'});
-        });
+
+        return await query(insertQuery).then(async dataInsert => {
+            if(!dataInsert.ok) return res.status(dataInsert.status).json({ok: false, message: dataInsert.message})
+
+            const getStockQuery = await query(`SELECT stock FROM store_commodity 
+            WHERE store_id = ${output.store_id} AND commodity_id = ${output.commodity_id}`);
+
+            if(getStockQuery.result[0][0] != null) {
+                const stock: number = Number(getStockQuery.result[0][0].stock);
+                const quantity: number = Number(output.quantity);
+
+                const totalStock: number = stock + quantity;            
+
+                const updateStockQuery = `UPDATE store_commodity SET stock=${totalStock} WHERE 
+                    store_id=${output.store_id} AND commodity_id=${output.commodity_id}`;
+                    
+                    return await query(updateStockQuery).then(async dataUpdate => {
+                        if(!dataUpdate.ok) return res.status(dataUpdate.status).json({ok: false, message: dataUpdate.message})
+                        return res.status(dataInsert.status).json({ok: true, message: 'Salida creado correctamente'});          
+                    });
+
+            }
+
+        });  
+
+
     }catch(error) {
         return res.status(500).json({ok: false, message: error});
     }
+}
+
+
+//================== ACTUALIZAR UNA SALIDA ==================//
+export async function updateOutput(req: Request, res: Response) {
+    const output: OutputModel = req.body;
+    const outputID = req.params.output_id;
+
+    if(Number.isNaN(output.environment_id) || Number.isNaN(output.employee_gives) 
+    || Number.isNaN(output.employee_receives) || output.date_output == null || Number.isNaN(output.state)) 
+        return res.status(404).json({ok: false, message: `La variable 'name' y 'state' son obligatorio!`});  
+
+    try {
+        const updateQuery = `UPDATE output SET environment_id=${output.environment_id}, 
+            employee_gives = ${output.employee_gives}, employee_receives=${output.employee_receives},
+            notes = "${output.notes}", date_output = "${output.date_output}" WHERE output_id = ${outputID}`;    
+
+        return await query(updateQuery).then(async dataUpdate => {
+            if(!dataUpdate.ok) return res.status(dataUpdate.status).json({ok: false, message: dataUpdate.message});    
+            return res.status(dataUpdate.status).json({ok: true, message: 'La salida se actualizó correctamente'});
+        });
+    }catch(error) {
+        return res.status(500).json({ok: false, message: error});
+    }   
+}
+
+
+//================== ACTUALIZAR UN STOCK ==================//
+export async function updateStock(req: Request, res: Response) {
+    const output: OutputModel = req.body;
+    const outputID = req.params.output_id;
+
+    if(Number.isNaN(output.quantity) || Number.isNaN(output.store_id) || Number.isNaN(output.commodity_id)) {
+        return res.status(404).json({ok: false, message: `La variable 'name' y 'state' son obligatorio!`});  
+    }        
+
+    try {
+        const getStockQuery = await query(`SELECT stock FROM store_commodity 
+            WHERE store_id = ${output.store_id} AND commodity_id = ${output.commodity_id}`);
+
+        if(getStockQuery.result[0][0] != null) {
+            const stock: number = Number(getStockQuery.result[0][0].stock);
+            const quantity: number = Number(output.quantity);
+
+            const totalStock: number = stock + quantity;
+            
+            const updateStockQuery = await query(`UPDATE store_commodity SET stock=${totalStock} WHERE 
+            store_id=${output.store_id} AND commodity_id=${output.commodity_id}`);
+            
+            if(updateStockQuery.ok) {
+                const updateOutputQuery = await query(`UPDATE output SET quantity=${req.body.left_quantity} WHERE 
+                    output_id = ${outputID}`);
+                    
+                if(updateOutputQuery.ok) {
+                    return res.status(updateStockQuery.status)
+                        .json({ok: true, message: 'La salida se actualizó correctamente'});
+                }else {
+                    return res.status(updateOutputQuery.status)
+                        .json({ok: false, message: updateOutputQuery.message});
+                }               
+
+            }
+
+            return res.status(updateStockQuery.status).json({ok: false, message: updateStockQuery.message});            
+        }
+            
+        return res.status(400).json({ok: true, message: 'Error de stock'});
+            
+    }catch(error) {
+        return res.status(500).json({ok: false, message: error});
+    }   
 }

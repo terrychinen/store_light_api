@@ -5,9 +5,11 @@ export class PurchaseOrderModel implements IPurchaseOrder {
     provider_id: number;
     employee_id: number;
     order_date: string;
+    waiting_date: string;
     expected_date: string;
     receive_date: string;
     paid_date: string;
+    cancel_date: string;
     total_price: string;
     message: string;
     updated_by: number;
