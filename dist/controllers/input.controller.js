@@ -52,7 +52,7 @@ function getInputs(req, res) {
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
-                    getQuery = "SELECT purchase_order_id, commodity_id,\n        (SELECT name FROM commodity WHERE commodity_id = i.commodity_id)commodity_name,\n        store_id, (SELECT name FROM store WHERE store_id = i.store_id)store_name, \n        employee_id, (SELECT username FROM employee WHERE employee_id = i.employee_id)username, \n        quantity, date, state FROM input i WHERE state = " + state + " LIMIT 20";
+                    getQuery = "SELECT purchase_order_id, employee_id, \n        (SELECT username FROM employee WHERE employee_id = i.employee_id)username, \n        input_date, notes, state FROM input i WHERE state = " + state + " LIMIT 20";
                     return [4 /*yield*/, query_1.query(getQuery).then(function (data) {
                             if (!data.ok)
                                 return res.status(data.status).json({ ok: false, message: data.message });
@@ -97,41 +97,59 @@ function getReceiveOrderDetail(req, res) {
     });
 }
 exports.getReceiveOrderDetail = getReceiveOrderDetail;
-/*
-input_id?: number;
-    commodity_id: number;
-    store_id: number;
-    employee_id: number;
-    quantity: number;
-    date: string;
-    state: number;
-
-*/
 //================== CREAR UNA ENTRADA ==================//
 function createInput(req, res) {
     return __awaiter(this, void 0, void 0, function () {
-        var input, insertQuery, error_3;
+        var body, input, inputDetail, detail, insertInput, error_3;
+        var _this = this;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    input = req.body;
-                    if (Number.isNaN(input.commodity_id) || Number.isNaN(input.state) || Number.isNaN(input.store_id)
-                        || Number.isNaN(input.quantity))
-                        return [2 /*return*/, res.status(404).json({ ok: false, message: "La variable 'name' y 'state' son obligatorio!" })];
+                    body = req.body;
+                    input = body;
+                    inputDetail = body;
+                    detail = body.detail;
                     _a.label = 1;
                 case 1:
-                    _a.trys.push([1, 3, , 4]);
-                    insertQuery = "INSERT INTO input (purchase_order_id, commodity_id, store_id, employee_id, quantity, date, state) \n            VALUES (" + input.purchase_order_id + ", " + input.commodity_id + ", " + input.store_id + ", " + input.employee_id + ", " + input.quantity + ", \"" + input.date + "\", " + input.state + ")";
-                    return [4 /*yield*/, query_1.query(insertQuery).then(function (data) {
-                            if (!data.ok)
-                                return res.status(data.status).json({ ok: false, message: data.message });
-                            return res.status(data.status).json({ ok: true, message: 'Entrada creado correctamente' });
-                        })];
-                case 2: return [2 /*return*/, _a.sent()];
-                case 3:
+                    _a.trys.push([1, 4, , 5]);
+                    if (Number.isNaN(input.employee_id) || Number.isNaN(input.purchase_order_id) ||
+                        input.input_date == null || input.notes == null ||
+                        Number.isNaN(input.state))
+                        return [2 /*return*/, res.status(404).json({ ok: false, message: "La variable 'employee_id', 'pruchase_order_id', 'input_date', \n                'notes' y 'state' son obligatorios!" })];
+                    return [4 /*yield*/, checkIfEmployeeAndPurchaseOrderExists(res, input.purchase_order_id, input.employee_id)];
+                case 2:
+                    _a.sent();
+                    insertInput = "INSERT INTO input (purchase_order_id, employee_id, input_date, notes, state) \n                VALUES (" + input.purchase_order_id + ", " + input.employee_id + ", \n                \"" + input.input_date + "\", \"" + input.notes + "\", " + input.state + ")";
+                    return [4 /*yield*/, query_1.query(insertInput).then(function (createInputData) { return __awaiter(_this, void 0, void 0, function () {
+                            var inputID, i, insertInputDetail;
+                            return __generator(this, function (_a) {
+                                switch (_a.label) {
+                                    case 0:
+                                        if (!createInputData.ok)
+                                            return [2 /*return*/, res.status(createInputData.status)
+                                                    .json({ ok: false, message: createInputData.message })];
+                                        inputID = createInputData.result[0].insertId;
+                                        i = 0;
+                                        _a.label = 1;
+                                    case 1:
+                                        if (!(i < detail.length)) return [3 /*break*/, 4];
+                                        insertInputDetail = "INSERT INTO input_detail (input_id, store_id, commodity_id, quantity) \n                VALUES (" + inputID + ", " + detail[i].store_id + ", " + detail[i].commodity_id + ", " + detail[i].quantity + ")";
+                                        return [4 /*yield*/, query_1.query(insertInputDetail)];
+                                    case 2:
+                                        _a.sent();
+                                        _a.label = 3;
+                                    case 3:
+                                        i++;
+                                        return [3 /*break*/, 1];
+                                    case 4: return [2 /*return*/, res.status(200).json({ ok: true, message: 'Entrada creado correctamente' })];
+                                }
+                            });
+                        }); })];
+                case 3: return [2 /*return*/, _a.sent()];
+                case 4:
                     error_3 = _a.sent();
                     return [2 /*return*/, res.status(500).json({ ok: false, message: error_3 })];
-                case 4: return [2 /*return*/];
+                case 5: return [2 /*return*/];
             }
         });
     });
@@ -263,3 +281,25 @@ function searchCategory(req, res) {
     });
 }
 exports.searchCategory = searchCategory;
+function checkIfEmployeeAndPurchaseOrderExists(res, purchaseOrderID, employeeID) {
+    return __awaiter(this, void 0, void 0, function () {
+        var checkIfPurchaseOrderExists, checkIfEmployeeExists;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0: return [4 /*yield*/, query_1.query("SELECT * FROM purchase_order WHERE \n        purchase_order_id = " + purchaseOrderID)];
+                case 1:
+                    checkIfPurchaseOrderExists = (_a.sent()).result;
+                    if (checkIfPurchaseOrderExists[0][0] == null) {
+                        return [2 /*return*/, res.status(400).json({ ok: false, message: 'No existe el ID del órden de pedido' })];
+                    }
+                    return [4 /*yield*/, query_1.query("SELECT * FROM employee WHERE employee_id = " + employeeID)];
+                case 2:
+                    checkIfEmployeeExists = (_a.sent()).result;
+                    if (checkIfEmployeeExists[0][0] == null) {
+                        return [2 /*return*/, res.status(400).json({ ok: false, message: 'No existe el ID del empleado' })];
+                    }
+                    return [2 /*return*/];
+            }
+        });
+    });
+}

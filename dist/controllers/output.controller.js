@@ -35,9 +35,13 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateStock = exports.updateOutput = exports.createOutput = exports.getOutputs = void 0;
+exports.searchOutput = exports.updateStock = exports.updateOutput = exports.createOutput = exports.getOutputs = void 0;
 var query_1 = require("../query/query");
+var dateformat_1 = __importDefault(require("dateformat"));
 //================== OBTENER TODAS LAS SALIDAS ==================//
 function getOutputs(req, res) {
     return __awaiter(this, void 0, void 0, function () {
@@ -52,13 +56,13 @@ function getOutputs(req, res) {
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
-                    getQuery = "SELECT output_id, store_id,\n        (SELECT name FROM store WHERE store_id = o.store_id)store_name, commodity_id, \n        (SELECT name FROM commodity WHERE commodity_id = o.commodity_id)commodity_name, environment_id,\n        (SELECT name FROM environment WHERE environment_id = o.environment_id)environment_name,    \n        employee_gives, (SELECT username FROM employee WHERE employee_id = o.employee_gives)employee_gives_name, \n        employee_receives, (SELECT username FROM employee WHERE employee_id = o.employee_receives)employee_receives_name, \n        quantity, o.date_output, notes, state FROM output o WHERE state = " + state + " LIMIT 20";
+                    getQuery = "SELECT output_id, store_id,\n        (SELECT name FROM store WHERE store_id = o.store_id)store_name, commodity_id, \n        (SELECT name FROM commodity WHERE commodity_id = o.commodity_id)commodity_name, environment_id,\n        (SELECT name FROM environment WHERE environment_id = o.environment_id)environment_name,    \n        employee_gives, (SELECT username FROM employee WHERE employee_id = o.employee_gives)employee_gives_name, \n        employee_receives, (SELECT username FROM employee WHERE employee_id = o.employee_receives)employee_receives_name, \n        quantity, o.date_output, notes, state FROM output o WHERE state = " + state + " ORDER BY o.date_output DESC LIMIT 200";
                     return [4 /*yield*/, query_1.query(getQuery).then(function (data) {
                             if (!data.ok)
                                 return res.status(data.status).json({ ok: false, message: data.message });
                             var outputList = data.result[0];
                             for (var i = 0; i < outputList.length; i++) {
-                                data.result[0][i].date_output = data.result[0][i].date_output.toISOString().replace(/T/, ' ').replace(/\..+/, '');
+                                data.result[0][i].date_output = transformDate(data.result[0][i].date_output);
                             }
                             return res.status(data.status).json({ ok: true, message: data.message, result: data.result[0] });
                         })];
@@ -72,6 +76,13 @@ function getOutputs(req, res) {
     });
 }
 exports.getOutputs = getOutputs;
+function transformDate(dateString) {
+    if (dateString) {
+        var dateTransform = new Date(dateString);
+        return dateformat_1.default(dateTransform, 'yyyy-mm-dd HH:MM:ss');
+    }
+    return null;
+}
 //================== CREAR UNA SALIDA ==================//
 function createOutput(req, res) {
     return __awaiter(this, void 0, void 0, function () {
@@ -104,7 +115,7 @@ function createOutput(req, res) {
                                         if (!(getStockQuery.result[0][0] != null)) return [3 /*break*/, 3];
                                         stock = Number(getStockQuery.result[0][0].stock);
                                         quantity = Number(output.quantity);
-                                        totalStock = stock + quantity;
+                                        totalStock = stock - quantity;
                                         updateStockQuery = "UPDATE store_commodity SET stock=" + totalStock + " WHERE \n                    store_id=" + output.store_id + " AND commodity_id=" + output.commodity_id;
                                         return [4 /*yield*/, query_1.query(updateStockQuery).then(function (dataUpdate) { return __awaiter(_this, void 0, void 0, function () {
                                                 return __generator(this, function (_a) {
@@ -211,3 +222,50 @@ function updateStock(req, res) {
     });
 }
 exports.updateStock = updateStock;
+//================== BUSCAR SALIIDA ==================//
+function searchOutput(req, res) {
+    return __awaiter(this, void 0, void 0, function () {
+        var search, searchBy, state, columnName, querySearch, error_5;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    search = req.body.search;
+                    searchBy = req.body.search_by;
+                    state = Number(req.body.state);
+                    if (search == null || Number.isNaN(state))
+                        return [2 /*return*/, res.status(404).json({ ok: false, message: "La variable 'search' y 'state' son obligatorio!" })];
+                    _a.label = 1;
+                case 1:
+                    _a.trys.push([1, 3, , 4]);
+                    columnName = '';
+                    if (searchBy == 0) {
+                        columnName = 'c.name';
+                    }
+                    else if (searchBy == 1) {
+                        columnName = 'env.name';
+                    }
+                    else {
+                        columnName = 'o.date_output';
+                    }
+                    querySearch = "SELECT o.output_id, o.store_id, (s.name)store_name, c.commodity_id, \n            (c.name)commodity_name, o.environment_id, (env.name)environment_name, o.employee_gives,\n            (emp.username)employee_gives_name, o.employee_receives, (empp.username)employee_receives_name,\n            o.quantity, o.date_output, o.notes, o.state FROM output o \n            INNER JOIN store s ON s.store_id = o.store_id\n            INNER JOIN commodity c ON c.commodity_id = o.commodity_id\n            INNER JOIN environment env ON env.environment_id = o.environment_id\n            INNER JOIN employee emp ON emp.employee_id = o.employee_gives\n            INNER JOIN employee empp ON empp.employee_id = o.employee_receives\n            WHERE " + columnName + " LIKE \"%" + search + "%\" AND o.state = " + state + " ORDER BY o.date_output DESC LIMIT 50";
+                    return [4 /*yield*/, query_1.query(querySearch).then(function (data) {
+                            if (!data.ok)
+                                return res.status(data.status).json({ ok: false, message: data.message });
+                            var outputList = data.result[0];
+                            for (var i = 0; i < outputList.length; i++) {
+                                data.result[0][i].date_output = transformDate(data.result[0][i].date_output);
+                            }
+                            return res.status(data.status).json({ ok: true, message: data.message, result: data.result[0] });
+                        })];
+                case 2: return [2 /*return*/, _a.sent()];
+                case 3:
+                    error_5 = _a.sent();
+                    console.log(error_5);
+                    console.log('Data: ');
+                    return [2 /*return*/, res.status(500).json({ ok: false, message: error_5 })];
+                case 4: return [2 /*return*/];
+            }
+        });
+    });
+}
+exports.searchOutput = searchOutput;

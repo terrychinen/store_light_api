@@ -1,11 +1,10 @@
 import { query } from '../query/query';
 import { Request, Response } from 'express';
 import { PurchaseOrderModel } from '../models/purchase_order.model';
-import { PurchaseOrderDetailModel } from '../models/purchase_order_detail.model';
 import dateformat from 'dateformat';
 
 
-//================== OBTENER TODAS LOS ORDENES DE PEDIDOS ==================//
+//================== OBTENER TODOS LOS ORDENES DE PEDIDOS ==================//
 export async function getPurchaseOrders(req: Request, res: Response){
     const offset = Number(req.query.offset);
 
@@ -20,49 +19,12 @@ export async function getPurchaseOrders(req: Request, res: Response){
         state FROM purchase_order po ORDER BY state ASC, order_date DESC LIMIT 20`;
 
         return await query(getQuery).then(data => {
-            /*for(var i=0; i<data.result[0].length; i++) {                                                          
-                if (!isNaN(data.result[0][i].order_date)) {
-                    var orderDate = new Date(data.result[0][i].order_date);
-                    data.result[0][i].order_date = dateformat(orderDate, 'yyyy-mm-dd hh:MM:ss');
-                    if( data.result[0][i].order_date == '1969-12-31 07:00:00') {
-                        data.result[0][i].order_date = null;                       
-                    }
-                   
-                }else{
-                    data.result[0][i].order_date = null;
-                }
-
-                if (!isNaN(data.result[0][i].expected_date)){
-                    var expectedDate = new Date(data.result[0][i].expected_date);
-                    data.result[0][i].expected_date = dateformat(expectedDate, 'yyyy-mm-dd hh:MM:ss');
-                    if( data.result[0][i].expected_date == '1969-12-31 07:00:00') {
-                        data.result[0][i].expected_date = null;
-                    }                
-                }else{
-                    data.result[0][i].expected_date = null;
-                }
-
-                if (!isNaN(data.result[0][i].receive_date)) {
-                    var receiveDate = new Date(data.result[0][i].receive_date); 
-                    data.result[0][i].receive_date = dateformat(receiveDate, 'yyyy-mm-dd hh:MM:ss');
-                    if(data.result[0][i].receive_date == '1969-12-31 07:00:00') {
-                        data.result[0][i].receive_date = null;
-                    }               
-                }else{
-                    data.result[0][i].receive_date = null;
-                }
-
-                if (!isNaN(data.result[0][i].paid_date)) {
-                    var paidDate = new Date(data.result[0][i].paid_date);    
-                    data.result[0][i].paid_date = dateformat(paidDate, 'yyyy-mm-dd hh:MM:ss');
-                    if(data.result[0][i].paid_date == '1969-12-31 07:00:00') {
-                        data.result[0][i].paid_date = null;
-                    }
-                   
-                }else{
-                    data.result[0][i].paid_date = null;
-                }
-            } */
+            for(let i=0; i<data.result[0].length; i++) {                                                          
+                data.result[0][i].order_date = transformDate(data.result[0][i].order_date);
+                data.result[0][i].expected_date = transformDate(data.result[0][i].expected_date); 
+                data.result[0][i].receive_date = transformDate(data.result[0][i].receive_date); 
+                data.result[0][i].paid_date = transformDate(data.result[0][i].paid_date);
+            } 
             if(!data.ok) return res.status(data.status).json({ok: false, message: data.message})
             return res.status(data.status).json({ok: true, message: data.message, result: data.result[0]});
         });
@@ -72,7 +34,16 @@ export async function getPurchaseOrders(req: Request, res: Response){
 }
 
 
-//================== OBTENER TODAS LOS ORDENES DE PEDIDOS ==================//
+function transformDate(dateString: string): string {
+    if (dateString) {
+        let dateTransform = new Date(dateString);
+        return dateformat(dateTransform, 'yyyy-mm-dd HH:MM:ss');
+    }
+    return null;
+}
+
+
+//================== OBTENER TODOS LOS DETALLES DEL ORDEN DE PEDIDO ==================//
 export async function getPurchaseOrderDetail(req: Request, res: Response){
     const purchaseOrderID = req.params.purchase_id;
     const offset = Number(req.query.offset);
@@ -175,8 +146,8 @@ export async function updatePurchaseOrder(req: Request, res: Response) {
         await checkIfProviderAndEmployeeExists(res, purchaseOrder.provider_id, purchaseOrder.updated_by);
         
         let updateQuery = `UPDATE purchase_order SET provider_id=${purchaseOrder.provider_id}, 
-            order_date = '2021-02-16 16:00:25',
-            waiting_date = NULLIF('${purchaseOrder.paid_date}', 'null'), 
+            order_date = NULLIF('${purchaseOrder.order_date}', 'null'), 
+            waiting_date = NULLIF('${purchaseOrder.waiting_date}', 'null'), 
             expected_date = NULLIF('${purchaseOrder.expected_date}', 'null'), 
             receive_date = NULLIF('${purchaseOrder.receive_date}', 'null'), 
             paid_date= NULLIF('${purchaseOrder.paid_date}', 'null'), 
@@ -225,7 +196,7 @@ async function checkIfProviderAndEmployeeExists(res: Response, providerID: Numbe
 
     let checkIfEmployeeExists = (await query(`SELECT * FROM employee WHERE employee_id = ${employeeID}`)).result;
     if(checkIfEmployeeExists[0][0] == null) {
-        return res.status(400).json({ok: false, message: 'No existe el ID del proveedor'});
+        return res.status(400).json({ok: false, message: 'No existe el ID del empleado'});
     }
 }
 
@@ -233,7 +204,7 @@ async function checkIfProviderAndEmployeeExists(res: Response, providerID: Numbe
 
 export async function getPurchaseOrdersWithState(req: Request, res: Response){
     const offset = Number(req.query.offset);
-    const state = Number(req.params.state);
+    const state = Number(req.query.state);
 
     if(Number.isNaN(offset)) return res.status(404).json({ok: false, message: `La variable 'offset' es obligatorio!`});
 
@@ -243,62 +214,14 @@ export async function getPurchaseOrdersWithState(req: Request, res: Response){
         employee_id, (SELECT username FROM employee WHERE employee_id = po.employee_id)employee_name, 
         order_date, expected_date, receive_date, paid_date, cancel_date, total_price, message, updated_by, 
         (SELECT name FROM employee WHERE employee_id = po.updated_by)updated_name,
-        state FROM purchase_order po WHERE receive_date != null ORDER BY order_date DESC LIMIT 20`;
+        state FROM purchase_order po WHERE state = ${state} ORDER BY order_date DESC LIMIT 20`;
 
         return await query(getQuery).then(data => {
             for(var i=0; i<data.result[0].length; i++) {                                                          
-                if (!isNaN(data.result[0][i].order_date)) {
-                    var orderDate = new Date(data.result[0][i].order_date);
-                    data.result[0][i].order_date = dateformat(orderDate, 'yyyy-mm-dd hh:MM:ss');
-                    if( data.result[0][i].order_date == '1969-12-31 07:00:00') {
-                        data.result[0][i].order_date = null;                       
-                    }
-                   
-                }else{
-                    data.result[0][i].order_date = null;
-                }
-
-                if (!isNaN(data.result[0][i].expected_date)){
-                    var expectedDate = new Date(data.result[0][i].expected_date);
-                    data.result[0][i].expected_date = dateformat(expectedDate, 'yyyy-mm-dd hh:MM:ss');
-                    if( data.result[0][i].expected_date == '1969-12-31 07:00:00') {
-                        data.result[0][i].expected_date = null;
-                    }                
-                }else{
-                    data.result[0][i].expected_date = null;
-                }
-
-                if (!isNaN(data.result[0][i].receive_date)) {
-                    var receiveDate = new Date(data.result[0][i].receive_date); 
-                    data.result[0][i].receive_date = dateformat(receiveDate, 'yyyy-mm-dd hh:MM:ss');
-                    if(data.result[0][i].receive_date == '1969-12-31 07:00:00') {
-                        data.result[0][i].receive_date = null;
-                    }               
-                }else{
-                    data.result[0][i].receive_date = null;
-                }
-
-                if (!isNaN(data.result[0][i].paid_date)) {
-                    var paidDate = new Date(data.result[0][i].paid_date);    
-                    data.result[0][i].paid_date = dateformat(paidDate, 'yyyy-mm-dd hh:MM:ss');
-                    if(data.result[0][i].paid_date == '1969-12-31 07:00:00') {
-                        data.result[0][i].paid_date = null;
-                    }
-                   
-                }else{
-                    data.result[0][i].paid_date = null;
-                }
-
-                if (!isNaN(data.result[0][i].cancel_date)) {
-                    var cancelDate = new Date(data.result[0][i].cancel_date);    
-                    data.result[0][i].cancel_date = dateformat(cancelDate, 'yyyy-mm-dd hh:MM:ss');
-                    if(data.result[0][i].cancel_date == '1969-12-31 07:00:00') {
-                        data.result[0][i].cancel_date = null;
-                    }
-                   
-                }else{
-                    data.result[0][i].cancel_date = null;
-                }
+                data.result[0][i].order_date = transformDate(data.result[0][i].order_date);
+                data.result[0][i].expected_date = transformDate(data.result[0][i].expected_date); 
+                data.result[0][i].receive_date = transformDate(data.result[0][i].receive_date); 
+                data.result[0][i].paid_date = transformDate(data.result[0][i].paid_date);
             }
             if(!data.ok) return res.status(data.status).json({ok: false, message: data.message})
             return res.status(data.status).json({ok: true, message: data.message, result: data.result[0]});

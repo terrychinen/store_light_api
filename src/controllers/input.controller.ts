@@ -1,7 +1,7 @@
 import { query } from '../query/query';
 import { Request, Response } from 'express';
-import { CategoryModel } from '../models/category.model';
 import { InputModel } from '../models/input.model';
+import { InputDetailModel } from '../models/input_detail.model';
 
 
 //================== OBTENER TODAS LAS ENTRADAS ==================//
@@ -9,14 +9,13 @@ export async function getInputs(req: Request, res: Response){
     const offset = Number(req.query.offset);
     const state = Number(req.query.state);
 
-    if(Number.isNaN(offset) || Number.isNaN(state)) return res.status(404).json({ok: false, message: `La variable 'offset' y 'state' son obligatorio!`});
+    if(Number.isNaN(offset) || Number.isNaN(state)) return res.status(404).json({ok: false, 
+        message: `La variable 'offset' y 'state' son obligatorio!`});
 
     try {
-        const getQuery = `SELECT purchase_order_id, commodity_id,
-        (SELECT name FROM commodity WHERE commodity_id = i.commodity_id)commodity_name,
-        store_id, (SELECT name FROM store WHERE store_id = i.store_id)store_name, 
-        employee_id, (SELECT username FROM employee WHERE employee_id = i.employee_id)username, 
-        quantity, date, state FROM input i WHERE state = ${state} LIMIT 20`;        
+        const getQuery = `SELECT purchase_order_id, employee_id, 
+        (SELECT username FROM employee WHERE employee_id = i.employee_id)username, 
+        input_date, notes, state FROM input i WHERE state = ${state} LIMIT 20`;        
 
         
         return await query(getQuery).then(data => {
@@ -34,7 +33,8 @@ export async function getReceiveOrderDetail(req: Request, res: Response){
     const offset = Number(req.query.offset);
     const state = Number(req.query.state);
 
-    if(Number.isNaN(offset) || Number.isNaN(state)) return res.status(404).json({ok: false, message: `La variable 'offset' y 'state' son obligatorio!`});
+    if(Number.isNaN(offset) || Number.isNaN(state)) return res.status(404).json({ok: false, 
+        message: `La variable 'offset' y 'state' son obligatorio!`});
 
     try {
         const getQuery = `SELECT purchase_order_id, 
@@ -53,36 +53,53 @@ export async function getReceiveOrderDetail(req: Request, res: Response){
     }
 }
 
-/*
-input_id?: number;
-    commodity_id: number;
-    store_id: number;
-    employee_id: number;
-    quantity: number;
-    date: string;
-    state: number;
-
-*/
 
 
 //================== CREAR UNA ENTRADA ==================//
 export async function createInput(req: Request, res: Response) {
-    const input: InputModel = req.body;
-
-    if(Number.isNaN(input.commodity_id) || Number.isNaN(input.state) || Number.isNaN(input.store_id)
-        || Number.isNaN(input.quantity)) return res.status(404).json({ok: false, message: `La variable 'name' y 'state' son obligatorio!`});
-
-    try {        
-        const insertQuery = `INSERT INTO input (purchase_order_id, commodity_id, store_id, employee_id, quantity, date, state) 
-            VALUES (${input.purchase_order_id}, ${input.commodity_id}, ${input.store_id}, ${input.employee_id}, ${input.quantity}, "${input.date}", ${input.state})`;
+    const body = req.body;
+    const input: InputModel = body;
+    const inputDetail: InputDetailModel = body;
     
-        return await query(insertQuery).then(data => {
-            if(!data.ok) return res.status(data.status).json({ok: false, message: data.message})
-            return res.status(data.status).json({ok: true, message: 'Entrada creado correctamente'});
-        });
+    const detail: any[] = body.detail;
+
+    try {
+        if(Number.isNaN(input.employee_id) || Number.isNaN(input.purchase_order_id) || 
+        input.input_date == null || input.notes == null || 
+        Number.isNaN(input.state)) return res.status(404).json({ok: false, 
+            message: `La variable 'employee_id', 'pruchase_order_id', 'input_date', 
+                'notes' y 'state' son obligatorios!`});
+
+        await checkIfEmployeeAndPurchaseOrderExists(res, input.purchase_order_id, input.employee_id);
+  
+        let insertInput = `INSERT INTO input (purchase_order_id, employee_id, input_date, notes, state) 
+                VALUES (${input.purchase_order_id}, ${input.employee_id}, 
+                "${input.input_date}", "${input.notes}", ${input.state})`;
+
+         return await query(insertInput).then(async createInputData => {
+            if(!createInputData.ok) return res.status(createInputData.status)
+                .json({ok: false, message: createInputData.message})
+
+            const inputID = createInputData.result[0].insertId;
+    
+            for(let i=0; i<detail.length; i++) {
+
+                const insertInputDetail = `INSERT INTO input_detail (input_id, store_id, commodity_id, quantity) 
+                VALUES (${inputID}, ${detail[i].store_id}, ${detail[i].commodity_id}, ${detail[i].quantity})`;
+
+                await query(insertInputDetail);  
+            }   
+
+            return res.status(200).json({ok: true, message: 'Entrada creado correctamente'});
+    
+           
+        });   
+
+       
+    
     }catch(error) {
         return res.status(500).json({ok: false, message: error});
-    }
+    }   
 }
 
 
@@ -149,7 +166,8 @@ export async function searchCategory(req: Request, res: Response){
     const searchBy = req.body.search_by;
     const state = Number(req.body.state);
 
-    if(search == null || Number.isNaN(state)) return res.status(404).json({ok: false, message: `La variable 'search' y 'state' son obligatorio!`});
+    if(search == null || Number.isNaN(state)) return res.status(404).json({ok: false, 
+        message: `La variable 'search' y 'state' son obligatorio!`});
 
     try {        
         let columnName = '';
@@ -169,5 +187,22 @@ export async function searchCategory(req: Request, res: Response){
 
     }catch(error) {
         return res.status(500).json({ok: false, message: error});
+    }
+}
+
+
+
+
+async function checkIfEmployeeAndPurchaseOrderExists(res: Response, purchaseOrderID: Number, employeeID: Number) {
+    let checkIfPurchaseOrderExists = (await query(`SELECT * FROM purchase_order WHERE 
+        purchase_order_id = ${purchaseOrderID}`)).result;
+
+    if(checkIfPurchaseOrderExists[0][0] == null) {
+        return res.status(400).json({ok: false, message: 'No existe el ID del órden de pedido'});
+    }
+
+    let checkIfEmployeeExists = (await query(`SELECT * FROM employee WHERE employee_id = ${employeeID}`)).result;
+    if(checkIfEmployeeExists[0][0] == null) {
+        return res.status(400).json({ok: false, message: 'No existe el ID del empleado'});
     }
 }

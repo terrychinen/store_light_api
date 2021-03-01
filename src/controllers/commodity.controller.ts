@@ -12,7 +12,7 @@ export async function getCommodities(req: Request, res: Response){
 
     try {
         const getQuery = `SELECT comm.commodity_id, comm.category_id, (SELECT c.name FROM category c WHERE c.category_id = comm.category_id)category_name, 
-              comm.name, comm.state  FROM commodity comm WHERE state = ${state} LIMIT 20`;
+              comm.name, comm.state  FROM commodity comm WHERE state = ${state} LIMIT 250`;
 
         return await query(getQuery).then(data => {
             if(!data.ok) return res.status(data.status).json({ok: false, message: data.message})

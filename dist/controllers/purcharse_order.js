@@ -42,7 +42,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getPurchaseOrdersWithState = exports.updatePurchaseOrder = exports.createPurchaseOrder = exports.getPurchaseOrderDetail = exports.getPurchaseOrders = void 0;
 var query_1 = require("../query/query");
 var dateformat_1 = __importDefault(require("dateformat"));
-//================== OBTENER TODAS LOS ORDENES DE PEDIDOS ==================//
+//================== OBTENER TODOS LOS ORDENES DE PEDIDOS ==================//
 function getPurchaseOrders(req, res) {
     return __awaiter(this, void 0, void 0, function () {
         var offset, getQuery, error_1;
@@ -57,49 +57,12 @@ function getPurchaseOrders(req, res) {
                     _a.trys.push([1, 3, , 4]);
                     getQuery = "SELECT purchase_order_id, provider_id, \n        (SELECT name FROM provider WHERE provider_id = po.provider_id)provider_name, \n        employee_id, (SELECT username FROM employee WHERE employee_id = po.employee_id)employee_name, \n        order_date, waiting_date, expected_date, receive_date, paid_date, cancel_date, total_price, message, updated_by, \n        (SELECT name FROM employee WHERE employee_id = po.updated_by)updated_name,\n        state FROM purchase_order po ORDER BY state ASC, order_date DESC LIMIT 20";
                     return [4 /*yield*/, query_1.query(getQuery).then(function (data) {
-                            /*for(var i=0; i<data.result[0].length; i++) {
-                                if (!isNaN(data.result[0][i].order_date)) {
-                                    var orderDate = new Date(data.result[0][i].order_date);
-                                    data.result[0][i].order_date = dateformat(orderDate, 'yyyy-mm-dd hh:MM:ss');
-                                    if( data.result[0][i].order_date == '1969-12-31 07:00:00') {
-                                        data.result[0][i].order_date = null;
-                                    }
-                                   
-                                }else{
-                                    data.result[0][i].order_date = null;
-                                }
-                
-                                if (!isNaN(data.result[0][i].expected_date)){
-                                    var expectedDate = new Date(data.result[0][i].expected_date);
-                                    data.result[0][i].expected_date = dateformat(expectedDate, 'yyyy-mm-dd hh:MM:ss');
-                                    if( data.result[0][i].expected_date == '1969-12-31 07:00:00') {
-                                        data.result[0][i].expected_date = null;
-                                    }
-                                }else{
-                                    data.result[0][i].expected_date = null;
-                                }
-                
-                                if (!isNaN(data.result[0][i].receive_date)) {
-                                    var receiveDate = new Date(data.result[0][i].receive_date);
-                                    data.result[0][i].receive_date = dateformat(receiveDate, 'yyyy-mm-dd hh:MM:ss');
-                                    if(data.result[0][i].receive_date == '1969-12-31 07:00:00') {
-                                        data.result[0][i].receive_date = null;
-                                    }
-                                }else{
-                                    data.result[0][i].receive_date = null;
-                                }
-                
-                                if (!isNaN(data.result[0][i].paid_date)) {
-                                    var paidDate = new Date(data.result[0][i].paid_date);
-                                    data.result[0][i].paid_date = dateformat(paidDate, 'yyyy-mm-dd hh:MM:ss');
-                                    if(data.result[0][i].paid_date == '1969-12-31 07:00:00') {
-                                        data.result[0][i].paid_date = null;
-                                    }
-                                   
-                                }else{
-                                    data.result[0][i].paid_date = null;
-                                }
-                            } */
+                            for (var i = 0; i < data.result[0].length; i++) {
+                                data.result[0][i].order_date = transformDate(data.result[0][i].order_date);
+                                data.result[0][i].expected_date = transformDate(data.result[0][i].expected_date);
+                                data.result[0][i].receive_date = transformDate(data.result[0][i].receive_date);
+                                data.result[0][i].paid_date = transformDate(data.result[0][i].paid_date);
+                            }
                             if (!data.ok)
                                 return res.status(data.status).json({ ok: false, message: data.message });
                             return res.status(data.status).json({ ok: true, message: data.message, result: data.result[0] });
@@ -114,7 +77,14 @@ function getPurchaseOrders(req, res) {
     });
 }
 exports.getPurchaseOrders = getPurchaseOrders;
-//================== OBTENER TODAS LOS ORDENES DE PEDIDOS ==================//
+function transformDate(dateString) {
+    if (dateString) {
+        var dateTransform = new Date(dateString);
+        return dateformat_1.default(dateTransform, 'yyyy-mm-dd HH:MM:ss');
+    }
+    return null;
+}
+//================== OBTENER TODOS LOS DETALLES DEL ORDEN DE PEDIDO ==================//
 function getPurchaseOrderDetail(req, res) {
     return __awaiter(this, void 0, void 0, function () {
         var purchaseOrderID, offset, getQuery, error_2;
@@ -231,7 +201,7 @@ function updatePurchaseOrder(req, res) {
                     return [4 /*yield*/, checkIfProviderAndEmployeeExists(res, purchaseOrder.provider_id, purchaseOrder.updated_by)];
                 case 2:
                     _a.sent();
-                    updateQuery = "UPDATE purchase_order SET provider_id=" + purchaseOrder.provider_id + ", \n            order_date = '2021-02-16 16:00:25',\n            waiting_date = NULLIF('" + purchaseOrder.paid_date + "', 'null'), \n            expected_date = NULLIF('" + purchaseOrder.expected_date + "', 'null'), \n            receive_date = NULLIF('" + purchaseOrder.receive_date + "', 'null'), \n            paid_date= NULLIF('" + purchaseOrder.paid_date + "', 'null'), \n            cancel_date =  NULLIF('" + purchaseOrder.cancel_date + "', 'null'), \n            total_price=" + purchaseOrder.total_price + ", updated_by=" + purchaseOrder.updated_by + ", \n            message = '" + purchaseOrder.message + "', state=" + purchaseOrder.state + " WHERE purchase_order_id = " + purchaseOrderID;
+                    updateQuery = "UPDATE purchase_order SET provider_id=" + purchaseOrder.provider_id + ", \n            order_date = NULLIF('" + purchaseOrder.order_date + "', 'null'), \n            waiting_date = NULLIF('" + purchaseOrder.waiting_date + "', 'null'), \n            expected_date = NULLIF('" + purchaseOrder.expected_date + "', 'null'), \n            receive_date = NULLIF('" + purchaseOrder.receive_date + "', 'null'), \n            paid_date= NULLIF('" + purchaseOrder.paid_date + "', 'null'), \n            cancel_date =  NULLIF('" + purchaseOrder.cancel_date + "', 'null'), \n            total_price=" + purchaseOrder.total_price + ", updated_by=" + purchaseOrder.updated_by + ", \n            message = '" + purchaseOrder.message + "', state=" + purchaseOrder.state + " WHERE purchase_order_id = " + purchaseOrderID;
                     return [4 /*yield*/, query_1.query(updateQuery).then(function (data) { return __awaiter(_this, void 0, void 0, function () {
                             var deleteQuery, i, insertOrderDetail;
                             return __generator(this, function (_a) {
@@ -288,7 +258,7 @@ function checkIfProviderAndEmployeeExists(res, providerID, employeeID) {
                 case 2:
                     checkIfEmployeeExists = (_a.sent()).result;
                     if (checkIfEmployeeExists[0][0] == null) {
-                        return [2 /*return*/, res.status(400).json({ ok: false, message: 'No existe el ID del proveedor' })];
+                        return [2 /*return*/, res.status(400).json({ ok: false, message: 'No existe el ID del empleado' })];
                     }
                     return [2 /*return*/];
             }
@@ -302,65 +272,19 @@ function getPurchaseOrdersWithState(req, res) {
             switch (_a.label) {
                 case 0:
                     offset = Number(req.query.offset);
-                    state = Number(req.params.state);
+                    state = Number(req.query.state);
                     if (Number.isNaN(offset))
                         return [2 /*return*/, res.status(404).json({ ok: false, message: "La variable 'offset' es obligatorio!" })];
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
-                    getQuery = "SELECT purchase_order_id, provider_id, \n        (SELECT name FROM provider WHERE provider_id = po.provider_id)provider_name, \n        employee_id, (SELECT username FROM employee WHERE employee_id = po.employee_id)employee_name, \n        order_date, expected_date, receive_date, paid_date, cancel_date, total_price, message, updated_by, \n        (SELECT name FROM employee WHERE employee_id = po.updated_by)updated_name,\n        state FROM purchase_order po WHERE receive_date != null ORDER BY order_date DESC LIMIT 20";
+                    getQuery = "SELECT purchase_order_id, provider_id, \n        (SELECT name FROM provider WHERE provider_id = po.provider_id)provider_name, \n        employee_id, (SELECT username FROM employee WHERE employee_id = po.employee_id)employee_name, \n        order_date, expected_date, receive_date, paid_date, cancel_date, total_price, message, updated_by, \n        (SELECT name FROM employee WHERE employee_id = po.updated_by)updated_name,\n        state FROM purchase_order po WHERE state = " + state + " ORDER BY order_date DESC LIMIT 20";
                     return [4 /*yield*/, query_1.query(getQuery).then(function (data) {
                             for (var i = 0; i < data.result[0].length; i++) {
-                                if (!isNaN(data.result[0][i].order_date)) {
-                                    var orderDate = new Date(data.result[0][i].order_date);
-                                    data.result[0][i].order_date = dateformat_1.default(orderDate, 'yyyy-mm-dd hh:MM:ss');
-                                    if (data.result[0][i].order_date == '1969-12-31 07:00:00') {
-                                        data.result[0][i].order_date = null;
-                                    }
-                                }
-                                else {
-                                    data.result[0][i].order_date = null;
-                                }
-                                if (!isNaN(data.result[0][i].expected_date)) {
-                                    var expectedDate = new Date(data.result[0][i].expected_date);
-                                    data.result[0][i].expected_date = dateformat_1.default(expectedDate, 'yyyy-mm-dd hh:MM:ss');
-                                    if (data.result[0][i].expected_date == '1969-12-31 07:00:00') {
-                                        data.result[0][i].expected_date = null;
-                                    }
-                                }
-                                else {
-                                    data.result[0][i].expected_date = null;
-                                }
-                                if (!isNaN(data.result[0][i].receive_date)) {
-                                    var receiveDate = new Date(data.result[0][i].receive_date);
-                                    data.result[0][i].receive_date = dateformat_1.default(receiveDate, 'yyyy-mm-dd hh:MM:ss');
-                                    if (data.result[0][i].receive_date == '1969-12-31 07:00:00') {
-                                        data.result[0][i].receive_date = null;
-                                    }
-                                }
-                                else {
-                                    data.result[0][i].receive_date = null;
-                                }
-                                if (!isNaN(data.result[0][i].paid_date)) {
-                                    var paidDate = new Date(data.result[0][i].paid_date);
-                                    data.result[0][i].paid_date = dateformat_1.default(paidDate, 'yyyy-mm-dd hh:MM:ss');
-                                    if (data.result[0][i].paid_date == '1969-12-31 07:00:00') {
-                                        data.result[0][i].paid_date = null;
-                                    }
-                                }
-                                else {
-                                    data.result[0][i].paid_date = null;
-                                }
-                                if (!isNaN(data.result[0][i].cancel_date)) {
-                                    var cancelDate = new Date(data.result[0][i].cancel_date);
-                                    data.result[0][i].cancel_date = dateformat_1.default(cancelDate, 'yyyy-mm-dd hh:MM:ss');
-                                    if (data.result[0][i].cancel_date == '1969-12-31 07:00:00') {
-                                        data.result[0][i].cancel_date = null;
-                                    }
-                                }
-                                else {
-                                    data.result[0][i].cancel_date = null;
-                                }
+                                data.result[0][i].order_date = transformDate(data.result[0][i].order_date);
+                                data.result[0][i].expected_date = transformDate(data.result[0][i].expected_date);
+                                data.result[0][i].receive_date = transformDate(data.result[0][i].receive_date);
+                                data.result[0][i].paid_date = transformDate(data.result[0][i].paid_date);
                             }
                             if (!data.ok)
                                 return res.status(data.status).json({ ok: false, message: data.message });

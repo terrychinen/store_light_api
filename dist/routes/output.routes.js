@@ -10,4 +10,6 @@ router.route('/:output_id')
     .put(output_controller_1.updateOutput);
 router.route('/stock/:output_id')
     .put(output_controller_1.updateStock);
+router.route('/search')
+    .post(output_controller_1.searchOutput);
 exports.default = router;

@@ -52,7 +52,7 @@ function getStoresCommodities(req, res) {
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
-                    getQuery = "SELECT sc.store_id, (s.name)store_name, sc.commodity_id, (c.name)commodity_name, sc.stock, \n\t\t    (SELECT SUM(stock) FROM store_commodity WHERE commodity_id = sc.commodity_id)stock_total,\n            sc.state FROM store_commodity sc\n            INNER JOIN store s ON s.store_id = sc.store_id\n            INNER JOIN commodity c ON c.commodity_id = sc.commodity_id\n            ORDER BY s.name ASC, c.name ASC";
+                    getQuery = "SELECT sc.store_id, (s.name)store_name, sc.commodity_id, (c.name)commodity_name, \n            sc.stock, sc.stock_min,\n\t\t    (SELECT SUM(stock) FROM store_commodity WHERE commodity_id = sc.commodity_id)stock_total,\n            sc.state FROM store_commodity sc\n            INNER JOIN store s ON s.store_id = sc.store_id\n            INNER JOIN commodity c ON c.commodity_id = sc.commodity_id\n            ORDER BY s.name ASC, c.name ASC";
                     return [4 /*yield*/, query_1.query(getQuery).then(function (data) {
                             if (!data.ok)
                                 return res.status(data.status).json({ ok: false, message: data.message });
@@ -89,7 +89,7 @@ function createStoreCommodity(req, res, next) {
                 case 3:
                     checkIfCommodity_StoreExists = (_a.sent()).result;
                     if (!(checkIfCommodity_StoreExists[0][0] == null)) return [3 /*break*/, 5];
-                    insertQuery = "INSERT INTO store_commodity (store_id, commodity_id, stock, state) VALUES \n                 (\"" + storeCommodity.store_id + "\", \"" + storeCommodity.commodity_id + "\", \n                     \"" + storeCommodity.stock + "\", \"" + storeCommodity.state + "\")";
+                    insertQuery = "INSERT INTO store_commodity (store_id, commodity_id, stock, stock_min, state) VALUES \n                 (" + storeCommodity.store_id + ", " + storeCommodity.commodity_id + ",  \n                     " + storeCommodity.stock + ", " + storeCommodity.stock_min + ", " + storeCommodity.state + ")";
                     return [4 /*yield*/, query_1.query(insertQuery).then(function (data) {
                             if (!data.ok)
                                 return res.status(data.status).json({ ok: false, message: data.message });
@@ -126,7 +126,7 @@ function updateStoreCommodity(req, res) {
                     return [4 /*yield*/, checkIfCommodityAndStoreExists(res, storeCommodity.commodity_id, storeCommodity.store_id)];
                 case 2:
                     _a.sent();
-                    updateQuery = "UPDATE store_commodity SET stock=\"" + storeCommodity.stock + "\", state=\"" + storeCommodity.state + "\" WHERE store_id=" + storeCommodity.store_id + " AND commodity_id = \"" + storeCommodity.commodity_id + "\"";
+                    updateQuery = "UPDATE store_commodity SET stock = " + storeCommodity.stock + ", \n            stock_min = " + storeCommodity.stock_min + ", state = " + storeCommodity.state + " WHERE \n            store_id = " + storeCommodity.store_id + " AND \n            commodity_id = " + storeCommodity.commodity_id;
                     return [4 /*yield*/, query_1.query(updateQuery).then(function (dataUpdate) { return __awaiter(_this, void 0, void 0, function () {
                             return __generator(this, function (_a) {
                                 if (!dataUpdate.ok)
@@ -160,7 +160,7 @@ function getCommoditiesByStoreID(req, res) {
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
-                    getQuery = "SELECT sc.commodity_id, (c.name)commodity_name, sc.stock, sc.state FROM store_commodity sc \n            INNER JOIN commodity c ON c.commodity_id = sc.commodity_id WHERE store_id = " + storeID + " AND c.name LIKE '%" + search + "%' LIMIT 10";
+                    getQuery = "SELECT sc.commodity_id, (c.name)commodity_name, sc.stock, sc.stock_min, sc.state FROM store_commodity sc \n            INNER JOIN commodity c ON c.commodity_id = sc.commodity_id WHERE store_id = " + storeID + " \n            AND c.name LIKE '%" + search + "%' LIMIT 10";
                     return [4 /*yield*/, query_1.query(getQuery).then(function (data) {
                             if (!data.ok)
                                 return res.status(data.status).json({ ok: false, message: data.message });
@@ -226,37 +226,3 @@ function checkIfCommodityAndStoreExists(res, commodityID, storeID) {
         });
     });
 }
-/*
-//================== ACTUALIZAR ALMACENES-MERCANCIAS ==================//
-export async function updateStoreCommodity(req: Request, res: Response) {
-    const storeCommodity: StoreCommodityModel = req.body;
-
-    if(Number.isNaN(storeCommodity.store_id) || Number.isNaN(storeCommodity.commodity_id) ||
-    Number.isNaN(storeCommodity.stock) || Number.isNaN(storeCommodity.state)) return res.status(404).json({ok: false, message: `La variable 'store_id', 'commodity_id', 'stock' y 'state' son obligatorio!`});
-    try {
-
-        const queryCheckStoreID = `SELECT * FROM store_commodity WHERE store_id = ${storeCommodity.store_id}`;
-
-        return await query(queryCheckStoreID).then(async dataCheckStoreId => {
-            if(!dataCheckStoreId.ok) return res.status(500).json({ok: false, message: dataCheckStoreId.message});
-            if(dataCheckStoreId.result[0][0] == null) return res.status(400).json({ok: false, message: `El almacén con el id ${storeCommodity.store_id} no existe!`});
-
-            const queryCheckCommodityID = `SELECT * FROM store_commodity WHERE commodity_id = ${storeCommodity.commodity_id}`;
-
-            return await query(queryCheckCommodityID).then(async dataCheckCommodityId => {
-                if(!dataCheckCommodityId.ok) return res.status(500).json({ok: false, message: dataCheckCommodityId.message});
-                if(dataCheckCommodityId.result[0][0] == null) return res.status(400).json({ok: false, message: `La mercancía con el id ${storeCommodity.commodity_id} no existe!`});
-
-                const updateQuery = `UPDATE store_commdity SET store_id=${storeCommodity.store_id}, state = "${category.state}" WHERE category_id = "${categoryID}"`;
-    
-                return await query(updateQuery).then(async dataUpdate => {
-                    if(!dataUpdate.ok) return res.status(dataUpdate.status).json({ok: false, message: dataUpdate.message});
-                    return res.status(dataUpdate.status).json({ok: true, message: 'La categoría se actualizó correctamente'});
-                });
-            });
-        });
-
-    }catch(error) {
-        return res.status(500).json({ok: false, message: error});
-    }
-} */ 

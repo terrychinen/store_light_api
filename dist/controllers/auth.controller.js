@@ -121,7 +121,6 @@ function signUp(req, res) {
             switch (_a.label) {
                 case 0:
                     _a.trys.push([0, 2, , 3]);
-                    console.log('HOLAAAAAAAAAAAAAAAAAAAAAAAa');
                     employee_1 = req.body;
                     if (employee_1.name == null || employee_1.username == null || employee_1.password == null || employee_1.state == null) {
                         return [2 /*return*/, res.status(404).json({
@@ -129,7 +128,6 @@ function signUp(req, res) {
                                 message: "La variable 'name', 'username' 'password' y 'state' son obligatorio!"
                             })];
                     }
-                    console.log('DOSSSSSSSSSSSSSSSSSSSSSSSSsss');
                     queryCheck = "SELECT * FROM employee WHERE username = \"" + employee_1.username + "\"";
                     return [4 /*yield*/, query_1.query(queryCheck).then(function (dataCheck) { return __awaiter(_this, void 0, void 0, function () {
                             var employeeDB, password, createEmployeeQuery;
@@ -140,7 +138,6 @@ function signUp(req, res) {
                                         if (!dataCheck.ok) {
                                             return [2 /*return*/, res.status(400).json({ ok: false, message: dataCheck.message })];
                                         }
-                                        console.log('DOEREFERFERFEFERFE');
                                         employeeDB = dataCheck.result[0][0];
                                         if (employeeDB != null) {
                                             return [2 /*return*/, res.status(400).json({ ok: false, message: 'El nombre de usuario ya existe' })];

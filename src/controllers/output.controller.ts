@@ -4,6 +4,7 @@ import { OutputModel } from '../models/output.model';
 import dateformat from 'dateformat';
 
 
+
 //================== OBTENER TODAS LAS SALIDAS ==================//
 export async function getOutputs(req: Request, res: Response){
     const offset = Number(req.query.offset);
@@ -18,16 +19,16 @@ export async function getOutputs(req: Request, res: Response){
         (SELECT name FROM environment WHERE environment_id = o.environment_id)environment_name,    
         employee_gives, (SELECT username FROM employee WHERE employee_id = o.employee_gives)employee_gives_name, 
         employee_receives, (SELECT username FROM employee WHERE employee_id = o.employee_receives)employee_receives_name, 
-        quantity, o.date_output, notes, state FROM output o WHERE state = ${state} LIMIT 20`;        
+        quantity, o.date_output, notes, state FROM output o WHERE state = ${state} ORDER BY o.date_output DESC LIMIT 200`;        
       
         return await query(getQuery).then(data => {
             if(!data.ok) return res.status(data.status).json({ok: false, message: data.message})
 
             var outputList: OutputModel[] = data.result[0];
 
-           for(let i=0; i<outputList.length; i++) {
-                data.result[0][i].date_output = data.result[0][i].date_output.toISOString().replace(/T/, ' ').replace(/\..+/, '');    
-           }
+            for(var i=0; i<outputList.length; i++) {                                                          
+                data.result[0][i].date_output = transformDate(data.result[0][i].date_output);
+            }
             
             return res.status(data.status).json({ok: true, message: data.message, result: data.result[0]});
         });
@@ -36,6 +37,14 @@ export async function getOutputs(req: Request, res: Response){
     }
 }
 
+
+function transformDate(dateString: string): string {
+    if (dateString) {
+        let dateTransform = new Date(dateString);
+        return dateformat(dateTransform, 'yyyy-mm-dd HH:MM:ss');
+    }
+    return null;
+}
 
 
 //================== CREAR UNA SALIDA ==================//
@@ -63,7 +72,7 @@ export async function createOutput(req: Request, res: Response) {
                 const stock: number = Number(getStockQuery.result[0][0].stock);
                 const quantity: number = Number(output.quantity);
 
-                const totalStock: number = stock + quantity;            
+                const totalStock: number = stock - quantity;            
 
                 const updateStockQuery = `UPDATE store_commodity SET stock=${totalStock} WHERE 
                     store_id=${output.store_id} AND commodity_id=${output.commodity_id}`;
@@ -82,6 +91,7 @@ export async function createOutput(req: Request, res: Response) {
         return res.status(500).json({ok: false, message: error});
     }
 }
+
 
 
 //================== ACTUALIZAR UNA SALIDA ==================//
@@ -106,6 +116,7 @@ export async function updateOutput(req: Request, res: Response) {
         return res.status(500).json({ok: false, message: error});
     }   
 }
+
 
 
 //================== ACTUALIZAR UN STOCK ==================//
@@ -152,4 +163,55 @@ export async function updateStock(req: Request, res: Response) {
     }catch(error) {
         return res.status(500).json({ok: false, message: error});
     }   
+}
+
+
+
+//================== BUSCAR SALIIDA ==================//
+export async function searchOutput(req: Request, res: Response){
+    const search = req.body.search;
+    const searchBy = req.body.search_by;
+    const state = Number(req.body.state);
+
+    if(search == null || Number.isNaN(state)) return res.status(404).json({ok: false, message: `La variable 'search' y 'state' son obligatorio!`});
+
+    try {        
+        let columnName = '';
+
+        if(searchBy == 0) {
+            columnName = 'c.name';
+        }else if (searchBy == 1) {
+            columnName = 'env.name';
+        }else {
+            columnName = 'o.date_output';
+        }     
+
+        const querySearch = `SELECT o.output_id, o.store_id, (s.name)store_name, c.commodity_id, 
+            (c.name)commodity_name, o.environment_id, (env.name)environment_name, o.employee_gives,
+            (emp.username)employee_gives_name, o.employee_receives, (empp.username)employee_receives_name,
+            o.quantity, o.date_output, o.notes, o.state FROM output o 
+            INNER JOIN store s ON s.store_id = o.store_id
+            INNER JOIN commodity c ON c.commodity_id = o.commodity_id
+            INNER JOIN environment env ON env.environment_id = o.environment_id
+            INNER JOIN employee emp ON emp.employee_id = o.employee_gives
+            INNER JOIN employee empp ON empp.employee_id = o.employee_receives
+            WHERE ${columnName} LIKE "%${search}%" AND o.state = ${state} ORDER BY o.date_output DESC LIMIT 50`;
+
+        return await query(querySearch).then( data => {
+            if(!data.ok) return res.status(data.status).json({ok: false, message: data.message});
+
+            var outputList: OutputModel[] = data.result[0];
+
+            for(var i=0; i<outputList.length; i++) {                                                          
+                data.result[0][i].date_output = transformDate(data.result[0][i].date_output);
+            }
+
+            return res.status(data.status).json({ok: true, message: data.message, result: data.result[0]});
+        });
+
+    }catch(error) {
+        console.log(error);
+        console.log('Data: ');        
+        return res.status(500).json({ok: false, message: error});
+    }
 }
