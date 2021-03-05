@@ -16,7 +16,7 @@ export async function getPurchaseOrders(req: Request, res: Response){
         employee_id, (SELECT username FROM employee WHERE employee_id = po.employee_id)employee_name, 
         order_date, waiting_date, expected_date, receive_date, paid_date, cancel_date, total_price, message, updated_by, 
         (SELECT name FROM employee WHERE employee_id = po.updated_by)updated_name,
-        state FROM purchase_order po ORDER BY state ASC, order_date DESC LIMIT 20`;
+        state, state_input FROM purchase_order po ORDER BY state ASC, order_date DESC LIMIT 200`;
 
         return await query(getQuery).then(data => {
             for(let i=0; i<data.result[0].length; i++) {                                                          
@@ -128,17 +128,14 @@ export async function updatePurchaseOrder(req: Request, res: Response) {
 
     const detail: any[] = body.detail;  
 
-
-    const orderDate: string = purchaseOrder.order_date;
-
-
     console.log(purchaseOrder.order_date);
 
     if(purchaseOrder.provider_id == null || Number.isNaN(purchaseOrder.employee_id) || 
         purchaseOrder.order_date == null || purchaseOrder.total_price == null || 
         Number.isNaN(purchaseOrder.state)) 
         return res.status(404).json({
-            ok: false, message: `La variable 'provider_id', 'employee_id', 'order_date', 'total_price' y 'state' son obligatorios!`
+            ok: false, 
+            message: `La variable 'provider_id', 'employee_id', 'order_date', 'total_price' y 'state' son obligatorios!`
         });                
 
 
@@ -158,18 +155,10 @@ export async function updatePurchaseOrder(req: Request, res: Response) {
         return await query(updateQuery).then(async data => {
             if(!data.ok) return res.status(data.status).json({ok: false, message: data.message});
 
-            console.log(purchaseOrder.order_date);
-
-           const deleteQuery = `DELETE FROM purchase_order_detail WHERE purchase_order_id = ${purchaseOrderID}`;                
-           await query(deleteQuery);
-            
-            
-            for(let i=0; i<detail.length; i++) {     
-                
-                console.log("commodity id: " +detail[i].commodity_id);
-                console.log("quantity: " +detail[i].quantity);
-                
-              
+            const deleteQuery = `DELETE FROM purchase_order_detail WHERE purchase_order_id = ${purchaseOrderID}`;                
+            await query(deleteQuery);
+                        
+            for(let i=0; i<detail.length; i++) {                   
                 const insertOrderDetail = `INSERT INTO purchase_order_detail (purchase_order_id, commodity_id, quantity, unit_price, 
                     total_price) VALUES (${purchaseOrderID}, ${detail[i].commodity_id}, ${detail[i].quantity}, 
                             ${detail[i].unit_price}, ${detail[i].commodity_total_price})`;
@@ -214,7 +203,7 @@ export async function getPurchaseOrdersWithState(req: Request, res: Response){
         employee_id, (SELECT username FROM employee WHERE employee_id = po.employee_id)employee_name, 
         order_date, expected_date, receive_date, paid_date, cancel_date, total_price, message, updated_by, 
         (SELECT name FROM employee WHERE employee_id = po.updated_by)updated_name,
-        state FROM purchase_order po WHERE state = ${state} ORDER BY order_date DESC LIMIT 20`;
+        state, state_input FROM purchase_order po WHERE state = ${state} ORDER BY order_date DESC LIMIT 20`;
 
         return await query(getQuery).then(data => {
             for(var i=0; i<data.result[0].length; i++) {                                                          

@@ -36,7 +36,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getCommodityByStoreIDAndCommdotyId = exports.getCommoditiesByStoreID = exports.updateStoreCommodity = exports.createStoreCommodity = exports.getStoresCommodities = void 0;
+exports.getStoresCommoditiesWithStockMin = exports.getCommodityByStoreIDAndCommdotyId = exports.getCommoditiesByStoreID = exports.updateStoreCommodity = exports.createStoreCommodity = exports.getStoresCommodities = void 0;
 var query_1 = require("../query/query");
 //================== OBTENER TODAS LOS ALMACENES-MERCANCIAS ==================//
 function getStoresCommodities(req, res) {
@@ -160,7 +160,7 @@ function getCommoditiesByStoreID(req, res) {
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
-                    getQuery = "SELECT sc.commodity_id, (c.name)commodity_name, sc.stock, sc.stock_min, sc.state FROM store_commodity sc \n            INNER JOIN commodity c ON c.commodity_id = sc.commodity_id WHERE store_id = " + storeID + " \n            AND c.name LIKE '%" + search + "%' LIMIT 10";
+                    getQuery = "SELECT sc.commodity_id, (c.name)commodity_name,\n            sc.stock, sc.stock_min, sc.state FROM store_commodity sc \n            INNER JOIN commodity c ON c.commodity_id = sc.commodity_id\n            WHERE store_id = " + storeID + " AND c.name LIKE '%" + search + "%' LIMIT 10";
                     return [4 /*yield*/, query_1.query(getQuery).then(function (data) {
                             if (!data.ok)
                                 return res.status(data.status).json({ ok: false, message: data.message });
@@ -204,6 +204,36 @@ function getCommodityByStoreIDAndCommdotyId(req, res) {
     });
 }
 exports.getCommodityByStoreIDAndCommdotyId = getCommodityByStoreIDAndCommdotyId;
+//================== OBTENER TODAS LAS MERCANCIAS CON STOCK MIN ==================//
+function getStoresCommoditiesWithStockMin(req, res) {
+    return __awaiter(this, void 0, void 0, function () {
+        var offset, state, getQuery, error_6;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    offset = Number(req.query.offset);
+                    state = Number(req.query.state);
+                    if (Number.isNaN(offset) || Number.isNaN(state))
+                        return [2 /*return*/, res.status(404).json({ ok: false, message: "La variable 'offset' y 'state' son obligatorio!" })];
+                    _a.label = 1;
+                case 1:
+                    _a.trys.push([1, 3, , 4]);
+                    getQuery = "SELECT sc.store_id, (s.name)store_name, sc.commodity_id, (c.name)commodity_name, \n            sc.stock, sc.stock_min,\n\t\t    (SELECT SUM(stock) FROM store_commodity WHERE commodity_id = sc.commodity_id)stock_total,\n            sc.state FROM store_commodity sc\n            INNER JOIN store s ON s.store_id = sc.store_id\n            INNER JOIN commodity c ON c.commodity_id = sc.commodity_id\n            WHERE stock <= stock_min\n            ORDER BY s.name ASC, c.name ASC";
+                    return [4 /*yield*/, query_1.query(getQuery).then(function (data) {
+                            if (!data.ok)
+                                return res.status(data.status).json({ ok: false, message: data.message });
+                            return res.status(data.status).json({ ok: true, message: data.message, result: data.result[0] });
+                        })];
+                case 2: return [2 /*return*/, _a.sent()];
+                case 3:
+                    error_6 = _a.sent();
+                    return [2 /*return*/, res.status(500).json({ ok: false, message: error_6 })];
+                case 4: return [2 /*return*/];
+            }
+        });
+    });
+}
+exports.getStoresCommoditiesWithStockMin = getStoresCommoditiesWithStockMin;
 function checkIfCommodityAndStoreExists(res, commodityID, storeID) {
     return __awaiter(this, void 0, void 0, function () {
         var checkIfCommodityExists, checkIfStoreExists;

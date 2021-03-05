@@ -55,7 +55,7 @@ function getPurchaseOrders(req, res) {
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
-                    getQuery = "SELECT purchase_order_id, provider_id, \n        (SELECT name FROM provider WHERE provider_id = po.provider_id)provider_name, \n        employee_id, (SELECT username FROM employee WHERE employee_id = po.employee_id)employee_name, \n        order_date, waiting_date, expected_date, receive_date, paid_date, cancel_date, total_price, message, updated_by, \n        (SELECT name FROM employee WHERE employee_id = po.updated_by)updated_name,\n        state FROM purchase_order po ORDER BY state ASC, order_date DESC LIMIT 20";
+                    getQuery = "SELECT purchase_order_id, provider_id, \n        (SELECT name FROM provider WHERE provider_id = po.provider_id)provider_name, \n        employee_id, (SELECT username FROM employee WHERE employee_id = po.employee_id)employee_name, \n        order_date, waiting_date, expected_date, receive_date, paid_date, cancel_date, total_price, message, updated_by, \n        (SELECT name FROM employee WHERE employee_id = po.updated_by)updated_name,\n        state, state_input FROM purchase_order po ORDER BY state ASC, order_date DESC LIMIT 200";
                     return [4 /*yield*/, query_1.query(getQuery).then(function (data) {
                             for (var i = 0; i < data.result[0].length; i++) {
                                 data.result[0][i].order_date = transformDate(data.result[0][i].order_date);
@@ -177,7 +177,7 @@ exports.createPurchaseOrder = createPurchaseOrder;
 //================== ACTUALIZAR UN ORDEN DE PEDIDO ==================//
 function updatePurchaseOrder(req, res) {
     return __awaiter(this, void 0, void 0, function () {
-        var body, purchaseOrder, purchaseOrderID, detail, orderDate, updateQuery, error_4;
+        var body, purchaseOrder, purchaseOrderID, detail, updateQuery, error_4;
         var _this = this;
         return __generator(this, function (_a) {
             switch (_a.label) {
@@ -186,7 +186,6 @@ function updatePurchaseOrder(req, res) {
                     purchaseOrder = body;
                     purchaseOrderID = req.params.purchase_id;
                     detail = body.detail;
-                    orderDate = purchaseOrder.order_date;
                     console.log(purchaseOrder.order_date);
                     if (purchaseOrder.provider_id == null || Number.isNaN(purchaseOrder.employee_id) ||
                         purchaseOrder.order_date == null || purchaseOrder.total_price == null ||
@@ -209,7 +208,6 @@ function updatePurchaseOrder(req, res) {
                                     case 0:
                                         if (!data.ok)
                                             return [2 /*return*/, res.status(data.status).json({ ok: false, message: data.message })];
-                                        console.log(purchaseOrder.order_date);
                                         deleteQuery = "DELETE FROM purchase_order_detail WHERE purchase_order_id = " + purchaseOrderID;
                                         return [4 /*yield*/, query_1.query(deleteQuery)];
                                     case 1:
@@ -218,8 +216,6 @@ function updatePurchaseOrder(req, res) {
                                         _a.label = 2;
                                     case 2:
                                         if (!(i < detail.length)) return [3 /*break*/, 5];
-                                        console.log("commodity id: " + detail[i].commodity_id);
-                                        console.log("quantity: " + detail[i].quantity);
                                         insertOrderDetail = "INSERT INTO purchase_order_detail (purchase_order_id, commodity_id, quantity, unit_price, \n                    total_price) VALUES (" + purchaseOrderID + ", " + detail[i].commodity_id + ", " + detail[i].quantity + ", \n                            " + detail[i].unit_price + ", " + detail[i].commodity_total_price + ")";
                                         return [4 /*yield*/, query_1.query(insertOrderDetail)];
                                     case 3:
@@ -278,7 +274,7 @@ function getPurchaseOrdersWithState(req, res) {
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
-                    getQuery = "SELECT purchase_order_id, provider_id, \n        (SELECT name FROM provider WHERE provider_id = po.provider_id)provider_name, \n        employee_id, (SELECT username FROM employee WHERE employee_id = po.employee_id)employee_name, \n        order_date, expected_date, receive_date, paid_date, cancel_date, total_price, message, updated_by, \n        (SELECT name FROM employee WHERE employee_id = po.updated_by)updated_name,\n        state FROM purchase_order po WHERE state = " + state + " ORDER BY order_date DESC LIMIT 20";
+                    getQuery = "SELECT purchase_order_id, provider_id, \n        (SELECT name FROM provider WHERE provider_id = po.provider_id)provider_name, \n        employee_id, (SELECT username FROM employee WHERE employee_id = po.employee_id)employee_name, \n        order_date, expected_date, receive_date, paid_date, cancel_date, total_price, message, updated_by, \n        (SELECT name FROM employee WHERE employee_id = po.updated_by)updated_name,\n        state, state_input FROM purchase_order po WHERE state = " + state + " ORDER BY order_date DESC LIMIT 20";
                     return [4 /*yield*/, query_1.query(getQuery).then(function (data) {
                             for (var i = 0; i < data.result[0].length; i++) {
                                 data.result[0][i].order_date = transformDate(data.result[0][i].order_date);

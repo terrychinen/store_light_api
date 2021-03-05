@@ -35,9 +35,13 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.searchCategory = exports.deleteCategory = exports.updateInput = exports.createInput = exports.getReceiveOrderDetail = exports.getInputs = void 0;
+exports.getInputDetail = exports.searchInputByDate = exports.searchInput = exports.deleteCategory = exports.updateInput = exports.createInput = exports.getReceiveOrderDetail = exports.getInputs = void 0;
 var query_1 = require("../query/query");
+var dateformat_1 = __importDefault(require("dateformat"));
 //================== OBTENER TODAS LAS ENTRADAS ==================//
 function getInputs(req, res) {
     return __awaiter(this, void 0, void 0, function () {
@@ -52,10 +56,13 @@ function getInputs(req, res) {
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
-                    getQuery = "SELECT purchase_order_id, employee_id, \n        (SELECT username FROM employee WHERE employee_id = i.employee_id)username, \n        input_date, notes, state FROM input i WHERE state = " + state + " LIMIT 20";
+                    getQuery = "SELECT purchase_order_id, employee_id, \n        (SELECT username FROM employee e WHERE e.employee_id = i.employee_id)employee_name, \n        input_date, notes, state FROM input i WHERE state = " + state + " LIMIT 20";
                     return [4 /*yield*/, query_1.query(getQuery).then(function (data) {
                             if (!data.ok)
                                 return res.status(data.status).json({ ok: false, message: data.message });
+                            for (var i = 0; i < data.result[0].length; i++) {
+                                data.result[0][i].input_date = transformDate(data.result[0][i].input_date);
+                            }
                             return res.status(data.status).json({ ok: true, message: data.message, result: data.result[0] });
                         })];
                 case 2: return [2 /*return*/, _a.sent()];
@@ -68,6 +75,13 @@ function getInputs(req, res) {
     });
 }
 exports.getInputs = getInputs;
+function transformDate(dateString) {
+    if (dateString) {
+        var dateTransform = new Date(dateString);
+        return dateformat_1.default(dateTransform, 'yyyy-mm-dd HH:MM:ss');
+    }
+    return null;
+}
 function getReceiveOrderDetail(req, res) {
     return __awaiter(this, void 0, void 0, function () {
         var offset, state, getQuery, error_2;
@@ -121,33 +135,48 @@ function createInput(req, res) {
                     _a.sent();
                     insertInput = "INSERT INTO input (purchase_order_id, employee_id, input_date, notes, state) \n                VALUES (" + input.purchase_order_id + ", " + input.employee_id + ", \n                \"" + input.input_date + "\", \"" + input.notes + "\", " + input.state + ")";
                     return [4 /*yield*/, query_1.query(insertInput).then(function (createInputData) { return __awaiter(_this, void 0, void 0, function () {
-                            var inputID, i, insertInputDetail;
+                            var i, commodityID, storeID, quantity, getStockQuery, stock, totalStock, updateQuery;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
                                     case 0:
                                         if (!createInputData.ok)
                                             return [2 /*return*/, res.status(createInputData.status)
                                                     .json({ ok: false, message: createInputData.message })];
-                                        inputID = createInputData.result[0].insertId;
                                         i = 0;
                                         _a.label = 1;
                                     case 1:
-                                        if (!(i < detail.length)) return [3 /*break*/, 4];
-                                        insertInputDetail = "INSERT INTO input_detail (input_id, store_id, commodity_id, quantity) \n                VALUES (" + inputID + ", " + detail[i].store_id + ", " + detail[i].commodity_id + ", " + detail[i].quantity + ")";
-                                        return [4 /*yield*/, query_1.query(insertInputDetail)];
+                                        if (!(i < detail.length)) return [3 /*break*/, 6];
+                                        commodityID = detail[i].commodity_id;
+                                        storeID = detail[i].store_id;
+                                        quantity = detail[i].quantity;
+                                        return [4 /*yield*/, query_1.query("INSERT INTO input_detail (purchase_order_id, store_id, \n                    commodity_id, quantity) VALUES (" + input.purchase_order_id + ", " + storeID + ", \n                    " + commodityID + ", " + quantity + ")")];
                                     case 2:
                                         _a.sent();
-                                        _a.label = 3;
+                                        return [4 /*yield*/, query_1.query("SELECT stock FROM store_commodity WHERE \n                    store_id = " + storeID + " AND commodity_id = " + commodityID)];
                                     case 3:
+                                        getStockQuery = _a.sent();
+                                        stock = Number(getStockQuery.result[0][0].stock);
+                                        totalStock = stock + quantity;
+                                        return [4 /*yield*/, query_1.query("UPDATE store_commodity SET stock = " + totalStock + " WHERE \n                    store_id = " + storeID + " AND commodity_id = " + commodityID)];
+                                    case 4:
+                                        _a.sent();
+                                        _a.label = 5;
+                                    case 5:
                                         i++;
                                         return [3 /*break*/, 1];
-                                    case 4: return [2 /*return*/, res.status(200).json({ ok: true, message: 'Entrada creado correctamente' })];
+                                    case 6:
+                                        updateQuery = "UPDATE purchase_order SET state_input= " + 1 + " WHERE \n                purchase_order_id = " + input.purchase_order_id;
+                                        return [4 /*yield*/, query_1.query(updateQuery)];
+                                    case 7:
+                                        _a.sent();
+                                        return [2 /*return*/, res.status(200).json({ ok: true, message: 'Entrada creado correctamente' })];
                                 }
                             });
                         }); })];
                 case 3: return [2 /*return*/, _a.sent()];
                 case 4:
                     error_3 = _a.sent();
+                    console.log(error_3);
                     return [2 /*return*/, res.status(500).json({ ok: false, message: error_3 })];
                 case 5: return [2 /*return*/];
             }
@@ -158,44 +187,90 @@ exports.createInput = createInput;
 //================== ACTUALIZAR UNA ENTRADA ==================//
 function updateInput(req, res) {
     return __awaiter(this, void 0, void 0, function () {
-        var input, inputID, queryCheckId, error_4;
+        var input, purchaseID, detail, queryCheckId, error_4;
         var _this = this;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
                     input = req.body;
-                    inputID = req.params.input_id;
-                    if (Number.isNaN(inputID) || Number.isNaN(input.state))
-                        return [2 /*return*/, res.status(404).json({ ok: false, message: "La variable 'category_id', 'name' y 'state' son obligatorio!" })];
+                    purchaseID = req.params.purchase_id;
+                    detail = req.body.detail;
+                    if (Number.isNaN(purchaseID) || Number.isNaN(input.state))
+                        return [2 /*return*/, res.status(404).json({ ok: false, message: "La variable 'purchaseID' y 'state' son obligatorio!" })];
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
-                    queryCheckId = "SELECT * FROM input WHERE input_id = " + inputID;
+                    queryCheckId = "SELECT * FROM input WHERE purchase_order_id = " + purchaseID;
                     return [4 /*yield*/, query_1.query(queryCheckId).then(function (dataCheckId) { return __awaiter(_this, void 0, void 0, function () {
-                            var updateQuery;
-                            var _this = this;
+                            var updateQuery, getInputDetail_1, i, commodityID, storeID, quantity, getStockQuery, stock, totalStock, i, storeID, commodityID, quantity, getStockQuery, stock, totalStock;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
                                     case 0:
                                         if (!dataCheckId.ok)
                                             return [2 /*return*/, res.status(500).json({ ok: false, message: dataCheckId.message })];
                                         if (dataCheckId.result[0][0] == null)
-                                            return [2 /*return*/, res.status(400).json({ ok: false, message: "La entrada con el id " + inputID + " no existe!" })];
-                                        updateQuery = '';
-                                        return [4 /*yield*/, query_1.query(updateQuery).then(function (dataUpdate) { return __awaiter(_this, void 0, void 0, function () {
-                                                return __generator(this, function (_a) {
-                                                    if (!dataUpdate.ok)
-                                                        return [2 /*return*/, res.status(dataUpdate.status).json({ ok: false, message: dataUpdate.message })];
-                                                    return [2 /*return*/, res.status(dataUpdate.status).json({ ok: true, message: 'La categoría se actualizó correctamente' })];
-                                                });
-                                            }); })];
-                                    case 1: return [2 /*return*/, _a.sent()];
+                                            return [2 /*return*/, res.status(400).json({ ok: false, message: "La entrada con el id " + purchaseID + " no existe!" })];
+                                        return [4 /*yield*/, query_1.query("UPDATE input SET input_date = \"" + input.input_date + "\", notes = \"" + input.notes + "\", \n                state = " + input.state + " WHERE purchase_order_id = " + purchaseID)];
+                                    case 1:
+                                        updateQuery = _a.sent();
+                                        if (!updateQuery.ok) return [3 /*break*/, 15];
+                                        return [4 /*yield*/, query_1.query("SELECT store_id, commodity_id, quantity FROM input_detail WHERE purchase_order_id = " + purchaseID)];
+                                    case 2:
+                                        getInputDetail_1 = _a.sent();
+                                        i = 0;
+                                        _a.label = 3;
+                                    case 3:
+                                        if (!(i < getInputDetail_1.result[0].length)) return [3 /*break*/, 8];
+                                        commodityID = getInputDetail_1.result[0][i].commodity_id;
+                                        storeID = getInputDetail_1.result[0][i].store_id;
+                                        quantity = getInputDetail_1.result[0][i].quantity;
+                                        return [4 /*yield*/, query_1.query("SELECT stock FROM store_commodity WHERE \n                        store_id = " + storeID + " AND commodity_id = " + commodityID)];
+                                    case 4:
+                                        getStockQuery = _a.sent();
+                                        stock = Number(getStockQuery.result[0][0].stock);
+                                        totalStock = stock - quantity;
+                                        return [4 /*yield*/, query_1.query("UPDATE store_commodity SET stock = " + totalStock + " WHERE \n                        store_id = " + storeID + " AND commodity_id = " + commodityID)];
+                                    case 5:
+                                        _a.sent();
+                                        return [4 /*yield*/, query_1.query("DELETE FROM input_detail WHERE purchase_order_id = " + purchaseID + " AND \n                        store_id = " + storeID + " AND commodity_id = " + commodityID)];
+                                    case 6:
+                                        _a.sent();
+                                        _a.label = 7;
+                                    case 7:
+                                        i++;
+                                        return [3 /*break*/, 3];
+                                    case 8:
+                                        i = 0;
+                                        _a.label = 9;
+                                    case 9:
+                                        if (!(i < detail.length)) return [3 /*break*/, 14];
+                                        storeID = detail[i].store_id;
+                                        commodityID = detail[i].commodity_id;
+                                        quantity = detail[i].quantity;
+                                        return [4 /*yield*/, query_1.query("INSERT INTO input_detail (purchase_order_id, store_id, \n                        commodity_id, quantity) VALUES (" + input.purchase_order_id + ", " + storeID + ", \n                        " + commodityID + ", " + quantity + ")")];
+                                    case 10:
+                                        _a.sent();
+                                        return [4 /*yield*/, query_1.query("SELECT stock FROM store_commodity WHERE \n                    store_id = " + storeID + " AND commodity_id = " + commodityID)];
+                                    case 11:
+                                        getStockQuery = _a.sent();
+                                        stock = Number(getStockQuery.result[0][0].stock);
+                                        totalStock = stock + quantity;
+                                        return [4 /*yield*/, query_1.query("UPDATE store_commodity SET stock = " + totalStock + " WHERE \n                            store_id = " + storeID + " AND commodity_id = " + commodityID)];
+                                    case 12:
+                                        _a.sent();
+                                        _a.label = 13;
+                                    case 13:
+                                        i++;
+                                        return [3 /*break*/, 9];
+                                    case 14: return [2 /*return*/, res.status(updateQuery.status).json({ ok: true, message: 'La entrada se actualizó correctamente' })];
+                                    case 15: return [2 /*return*/, res.status(updateQuery.status).json({ ok: false, message: updateQuery.message })];
                                 }
                             });
                         }); })];
                 case 2: return [2 /*return*/, _a.sent()];
                 case 3:
                     error_4 = _a.sent();
+                    console.log("" + error_4);
                     return [2 /*return*/, res.status(500).json({ ok: false, message: error_4 })];
                 case 4: return [2 /*return*/];
             }
@@ -244,7 +319,7 @@ function deleteCategory(req, res) {
 }
 exports.deleteCategory = deleteCategory;
 //================== BUSCAR ENTRADA ==================//
-function searchCategory(req, res) {
+function searchInput(req, res) {
     return __awaiter(this, void 0, void 0, function () {
         var search, searchBy, state, columnName, querySearch, error_6;
         return __generator(this, function (_a) {
@@ -260,15 +335,18 @@ function searchCategory(req, res) {
                     _a.trys.push([1, 3, , 4]);
                     columnName = '';
                     if (searchBy == 0) {
-                        columnName = 'category_id';
+                        columnName = 'purchase_order_id';
                     }
                     else {
-                        columnName = 'name';
+                        columnName = 'notes';
                     }
-                    querySearch = "SELECT * FROM category WHERE " + columnName + " LIKE \"%" + search + "%\" AND state = " + state + " LIMIT 10";
+                    querySearch = "SELECT purchase_order_id, employee_id, \n        (SELECT username FROM employee e WHERE e.employee_id = i.employee_id)employee_name, \n        input_date, notes, state FROM input i WHERE " + columnName + " LIKE \"%" + search + "%\" AND state = " + state + " LIMIT 20";
                     return [4 /*yield*/, query_1.query(querySearch).then(function (data) {
                             if (!data.ok)
                                 return res.status(data.status).json({ ok: false, message: data.message });
+                            for (var i = 0; i < data.result[0].length; i++) {
+                                data.result[0][i].input_date = transformDate(data.result[0][i].input_date);
+                            }
                             return res.status(data.status).json({ ok: true, message: data.message, result: data.result[0] });
                         })];
                 case 2: return [2 /*return*/, _a.sent()];
@@ -280,7 +358,70 @@ function searchCategory(req, res) {
         });
     });
 }
-exports.searchCategory = searchCategory;
+exports.searchInput = searchInput;
+//================== BUSCAR ENTRADA ==================//
+function searchInputByDate(req, res) {
+    return __awaiter(this, void 0, void 0, function () {
+        var search, state, querySearch, error_7;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    search = req.body.search;
+                    state = Number(req.body.state);
+                    if (search == null || Number.isNaN(state))
+                        return [2 /*return*/, res.status(404).json({ ok: false, message: "La variable 'search' y 'state' son obligatorio!" })];
+                    _a.label = 1;
+                case 1:
+                    _a.trys.push([1, 3, , 4]);
+                    querySearch = "SELECT purchase_order_id, employee_id, \n        (SELECT username FROM employee e WHERE e.employee_id = i.employee_id)employee_name, \n        input_date, notes, state FROM input i WHERE input_date LIKE \"%" + search + "%\" AND state = " + state + " LIMIT 50";
+                    return [4 /*yield*/, query_1.query(querySearch).then(function (data) {
+                            if (!data.ok)
+                                return res.status(data.status).json({ ok: false, message: data.message });
+                            for (var i = 0; i < data.result[0].length; i++) {
+                                data.result[0][i].input_date = transformDate(data.result[0][i].input_date);
+                            }
+                            return res.status(data.status).json({ ok: true, message: data.message, result: data.result[0] });
+                        })];
+                case 2: return [2 /*return*/, _a.sent()];
+                case 3:
+                    error_7 = _a.sent();
+                    return [2 /*return*/, res.status(500).json({ ok: false, message: error_7 })];
+                case 4: return [2 /*return*/];
+            }
+        });
+    });
+}
+exports.searchInputByDate = searchInputByDate;
+//================== OBTENER TODOS LOS DETALLES DE LA ENTRADA ==================//
+function getInputDetail(req, res) {
+    return __awaiter(this, void 0, void 0, function () {
+        var purchaseOrderID, offset, getQuery, error_8;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    purchaseOrderID = req.params.purchase_id;
+                    offset = Number(req.query.offset);
+                    if (Number.isNaN(offset))
+                        return [2 /*return*/, res.status(404).json({ ok: false, message: "La variable 'offset' es obligatorio!" })];
+                    _a.label = 1;
+                case 1:
+                    _a.trys.push([1, 3, , 4]);
+                    getQuery = "SELECT purchase_order_id,\n        store_id, (SELECT name FROM store WHERE store_id = i.store_id)store_name, \n        commodity_id, (SELECT name FROM commodity WHERE commodity_id = i.commodity_id)commodity_name, \n        quantity FROM input_detail i WHERE purchase_order_id = " + purchaseOrderID;
+                    return [4 /*yield*/, query_1.query(getQuery).then(function (data) {
+                            if (!data.ok)
+                                return res.status(data.status).json({ ok: false, message: data.message });
+                            return res.status(data.status).json({ ok: true, message: data.message, result: data.result[0] });
+                        })];
+                case 2: return [2 /*return*/, _a.sent()];
+                case 3:
+                    error_8 = _a.sent();
+                    return [2 /*return*/, res.status(500).json({ ok: false, message: error_8 })];
+                case 4: return [2 /*return*/];
+            }
+        });
+    });
+}
+exports.getInputDetail = getInputDetail;
 function checkIfEmployeeAndPurchaseOrderExists(res, purchaseOrderID, employeeID) {
     return __awaiter(this, void 0, void 0, function () {
         var checkIfPurchaseOrderExists, checkIfEmployeeExists;

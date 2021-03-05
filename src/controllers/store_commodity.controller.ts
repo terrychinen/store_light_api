@@ -102,12 +102,14 @@ export async function getCommoditiesByStoreID(req: Request, res: Response){
     const offset = Number(req.body.offset);
     const state = Number(req.body.state);
 
-    if(Number.isNaN(offset) || Number.isNaN(state)) return res.status(404).json({ok: false, message: `La variable 'offset' y 'state' son obligatorio!`});
+    if(Number.isNaN(offset) || Number.isNaN(state)) return res.status(404).json({ok: false, 
+        message: `La variable 'offset' y 'state' son obligatorio!`});
 
     try {
-        const getQuery = `SELECT sc.commodity_id, (c.name)commodity_name, sc.stock, sc.stock_min, sc.state FROM store_commodity sc 
-            INNER JOIN commodity c ON c.commodity_id = sc.commodity_id WHERE store_id = ${storeID} 
-            AND c.name LIKE '%${search}%' LIMIT 10`;
+        const getQuery = `SELECT sc.commodity_id, (c.name)commodity_name,
+            sc.stock, sc.stock_min, sc.state FROM store_commodity sc 
+            INNER JOIN commodity c ON c.commodity_id = sc.commodity_id
+            WHERE store_id = ${storeID} AND c.name LIKE '%${search}%' LIMIT 10`;
         
         return await query(getQuery).then(data => {
             if(!data.ok) return res.status(data.status).json({ok: false, message: data.message})                                
@@ -139,6 +141,35 @@ export async function getCommodityByStoreIDAndCommdotyId(req: Request, res: Resp
     }
 }
    
+
+//================== OBTENER TODAS LAS MERCANCIAS CON STOCK MIN ==================//
+export async function getStoresCommoditiesWithStockMin(req: Request, res: Response){
+    const offset = Number(req.query.offset);
+    const state = Number(req.query.state);
+
+    if(Number.isNaN(offset) || Number.isNaN(state)) return res.status(404).json({ok: false, message: `La variable 'offset' y 'state' son obligatorio!`});
+
+    try {
+        const getQuery = `SELECT sc.store_id, (s.name)store_name, sc.commodity_id, (c.name)commodity_name, 
+            sc.stock, sc.stock_min,
+		    (SELECT SUM(stock) FROM store_commodity WHERE commodity_id = sc.commodity_id)stock_total,
+            sc.state FROM store_commodity sc
+            INNER JOIN store s ON s.store_id = sc.store_id
+            INNER JOIN commodity c ON c.commodity_id = sc.commodity_id
+            WHERE stock <= stock_min
+            ORDER BY s.name ASC, c.name ASC`;
+        
+        return await query(getQuery).then(data => {
+            if(!data.ok) return res.status(data.status).json({ok: false, message: data.message})
+            
+            return res.status(data.status).json({ok: true, message: data.message, result: data.result[0]});
+        });
+    }catch(error) {
+        return res.status(500).json({ok: false, message: error});
+    }
+}
+
+
 
 
 async function checkIfCommodityAndStoreExists(res: Response, commodityID: Number, storeID: Number) {
