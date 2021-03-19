@@ -15,9 +15,13 @@ export async function getInputs(req: Request, res: Response){
         message: `La variable 'offset' y 'state' son obligatorio!`});
 
     try {
-        const getQuery = `SELECT purchase_order_id, employee_id, 
-        (SELECT username FROM employee e WHERE e.employee_id = i.employee_id)employee_name, 
-        input_date, notes, state FROM input i WHERE state = ${state} LIMIT 20`;        
+        const getQuery = `SELECT i.purchase_order_id, i.employee_id, 
+        (e.username)employee_name, i.input_date, i.notes, po.provider_id,
+        (p.name)provider_name, i.state FROM input i 
+        INNER JOIN employee e ON e.employee_id = i.employee_id
+        INNER JOIN purchase_order po ON po.purchase_order_id = i.purchase_order_id
+        INNER JOIN provider p ON p.provider_id = po.provider_id
+        WHERE i.state = ${state} ORDER BY i.input_date DESC LIMIT 200`;        
 
         
         return await query(getQuery).then(data => {
@@ -29,9 +33,12 @@ export async function getInputs(req: Request, res: Response){
             return res.status(data.status).json({ok: true, message: data.message, result: data.result[0]});
         });
     }catch(error) {
+        console.log(error);
         return res.status(500).json({ok: false, message: error});
     }
 }
+
+
 
 function transformDate(dateString: string): string {
     if (dateString) {
@@ -40,6 +47,7 @@ function transformDate(dateString: string): string {
     }
     return null;
 }
+
 
 
 export async function getReceiveOrderDetail(req: Request, res: Response){
@@ -131,7 +139,6 @@ export async function createInput(req: Request, res: Response) {
         return res.status(500).json({ok: false, message: error});
     }   
 }
-
 
 
 
@@ -256,14 +263,20 @@ export async function searchInput(req: Request, res: Response){
         let columnName = '';
 
         if(searchBy == 0) {
-            columnName = 'purchase_order_id';
+            columnName = 'i.purchase_order_id';
+        }else if(searchBy == 1) {
+            columnName = 'i.notes';
         }else {
-            columnName = 'notes';
-        }
+            columnName = 'p.name';
+        }   
 
-        const querySearch = `SELECT purchase_order_id, employee_id, 
-        (SELECT username FROM employee e WHERE e.employee_id = i.employee_id)employee_name, 
-        input_date, notes, state FROM input i WHERE ${columnName} LIKE "%${search}%" AND state = ${state} LIMIT 20`;                
+        const querySearch = `SELECT i.purchase_order_id, i.employee_id, 
+        (e.username)employee_name, i.input_date, i.notes, po.provider_id,  
+        (p.name)provider_name, i.state FROM input i 
+        INNER JOIN employee e ON e.employee_id = i.employee_id
+        INNER JOIN purchase_order po ON po.purchase_order_id = i.purchase_order_id
+        INNER JOIN provider p ON p.provider_id = po.provider_id
+        WHERE ${columnName} LIKE "%${search}%" AND state = ${state} LIMIT 20`;                
 
         return await query(querySearch).then( data => {
             if(!data.ok) return res.status(data.status).json({ok: false, message: data.message})
@@ -290,10 +303,14 @@ export async function searchInputByDate(req: Request, res: Response){
     if(search == null || Number.isNaN(state)) return res.status(404).json({ok: false, 
         message: `La variable 'search' y 'state' son obligatorio!`});
 
-    try {        
-        const querySearch = `SELECT purchase_order_id, employee_id, 
-        (SELECT username FROM employee e WHERE e.employee_id = i.employee_id)employee_name, 
-        input_date, notes, state FROM input i WHERE input_date LIKE "%${search}%" AND state = ${state} LIMIT 50`;                
+    try {     
+        const querySearch = `SELECT i.purchase_order_id, i.employee_id, 
+        (e.username)employee_name, i.input_date, i.notes, po.provider_id, 
+        (p.name)provider_name, i.state FROM input i
+        INNER JOIN employee e ON e.employee_id = i.employee_id
+        INNER JOIN purchase_order po ON po.purchase_order_id = i.purchase_order_id
+        INNER JOIN provider p ON p.provider_id = po.provider_id  
+        WHERE i.input_date LIKE "%${search}%" AND i.state = ${state} LIMIT 100`;                
 
         return await query(querySearch).then( data => {
             if(!data.ok) return res.status(data.status).json({ok: false, message: data.message})
@@ -320,10 +337,12 @@ export async function getInputDetail(req: Request, res: Response){
     if(Number.isNaN(offset)) return res.status(404).json({ok: false, message: `La variable 'offset' es obligatorio!`});
 
     try {
-        const getQuery = `SELECT purchase_order_id,
-        store_id, (SELECT name FROM store WHERE store_id = i.store_id)store_name, 
-        commodity_id, (SELECT name FROM commodity WHERE commodity_id = i.commodity_id)commodity_name, 
-        quantity FROM input_detail i WHERE purchase_order_id = ${purchaseOrderID}`;
+        const getQuery = `SELECT i.purchase_order_id, i.store_id, 
+        (s.name)store_name, i.commodity_id, (c.name)commodity_name, 
+        i.quantity FROM input_detail i
+        INNER JOIN store s ON s.store_id = i.store_id
+        INNER JOIN commodity c ON c.commodity_id = i.commodity_id 
+        WHERE purchase_order_id = ${purchaseOrderID} ORDER BY c.name ASC`;
 
         return await query(getQuery).then(data => {    
             if(!data.ok) return res.status(data.status).json({ok: false, message: data.message})
@@ -335,6 +354,39 @@ export async function getInputDetail(req: Request, res: Response){
 }
 
 
+//================== OBTENER TODOS LOS DETALLES DE LA ENTRADA POR LA FECHA ACTUAL ==================//
+export async function getTodayInputDetail(req: Request, res: Response){
+    const inputDate = req.query.input_date;
+    
+    if(inputDate == null) return res.status(404).json({ok: false, message: `La variable 'inputDate' es obligatorio!`});
+
+    try {
+        const getQuery = `SELECT id.purchase_order_id, i.employee_id, 
+        e.username, id.store_id, (s.name)store_name, id.commodity_id, 
+        (c.name)commodity_name, id.quantity, i.input_date FROM input_detail id
+        INNER JOIN store s ON s.store_id = id.store_id
+        INNER JOIN commodity c ON c.commodity_id = id.commodity_id
+        INNER JOIN input i ON i.purchase_order_id = id.purchase_order_id
+        INNER JOIN employee e ON e.employee_id = i.employee_id 
+        WHERE i.input_date LIKE "%${inputDate}%"`;
+
+        return await query(getQuery).then(data => {    
+            if(!data.ok) {
+                console.log(data.message);                
+                return res.status(data.status).json({ok: false, message: data.message});
+            }
+
+            for(let i=0; i<data.result[0].length; i++) {
+                data.result[0][i].input_date = transformDate(data.result[0][i].input_date);
+            }
+            
+            return res.status(data.status).json({ok: true, message: data.message, result: data.result[0]});
+        });
+    }catch(error) {
+        console.log(error);    
+        return res.status(500).json({ok: false, message: error});
+    }
+}
 
 
 async function checkIfEmployeeAndPurchaseOrderExists(res: Response, purchaseOrderID: Number, employeeID: Number) {

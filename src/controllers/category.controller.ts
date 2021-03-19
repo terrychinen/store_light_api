@@ -11,7 +11,7 @@ export async function getCategories(req: Request, res: Response){
     if(Number.isNaN(offset) || Number.isNaN(state)) return res.status(404).json({ok: false, message: `La variable 'offset' y 'state' son obligatorio!`});
 
     try {
-        const getQuery = `SELECT * FROM category WHERE state = ${state} LIMIT 20`;
+        const getQuery = `SELECT * FROM category WHERE state = ${state} ORDER BY name ASC`;
         
         return await query(getQuery).then(data => {
             if(!data.ok) return res.status(data.status).json({ok: false, message: data.message})
@@ -111,6 +111,36 @@ export async function deleteCategory(req: Request, res: Response) {
             });
         });
 
+    }catch(error) {
+        return res.status(500).json({ok: false, message: error});
+    }
+
+}
+
+
+
+
+//================== OBTENER TODAS LAS CATEGORIAS CON LAS CANTIDADES DE TIPOS DE MERCANCIAS ==================//
+export async function getCategoriesWithCommodityQuantity(req: Request, res: Response){
+    const storeID = req.params.store_id;
+    const offset = Number(req.query.offset);
+    const state = Number(req.query.state);
+
+    if(Number.isNaN(storeID) || Number.isNaN(offset) || Number.isNaN(state)) return res.status(404).json({ok: false, message: `La variable 'offset' y 'state' son obligatorio!`});
+
+    try {
+        const getQuery = `SELECT DISTINCT(cate.category_id), cate.name, cate.state,
+             (SELECT COUNT(commodity_id) FROM store_commodity sc 
+                WHERE (SELECT category_id FROM commodity comm WHERE comm.commodity_id = sc.commodity_id) = cate.category_id)type  
+            FROM store_commodity sc
+            INNER JOIN commodity comm ON comm.commodity_id = sc.commodity_id
+            INNER JOIN category cate ON cate.category_id = comm.category_id
+            WHERE store_id = ${storeID} ORDER BY cate.name ASC`;
+        
+        return await query(getQuery).then(data => {
+            if(!data.ok) return res.status(data.status).json({ok: false, message: data.message})
+            return res.status(data.status).json({ok: true, message: data.message, result: data.result[0]});
+        });
     }catch(error) {
         return res.status(500).json({ok: false, message: error});
     }

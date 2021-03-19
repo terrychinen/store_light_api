@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getCategories, createCategory, updateCategory, deleteCategory, searchCategory } from '../controllers/category.controller';
+import { getCategories, createCategory, updateCategory, deleteCategory, searchCategory, getCategoriesWithCommodityQuantity } from '../controllers/category.controller';
 
 const router = Router();
 
@@ -17,5 +17,7 @@ router.route('/:category_id')
 router.route('/search')
     .post(searchCategory);
 
+router.route('/with/types/:store_id')
+    .get(getCategoriesWithCommodityQuantity)
 
 export default router;

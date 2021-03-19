@@ -1,6 +1,7 @@
 import express, { Application } from 'express';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
+import cors from "cors";
 
 import BodyParser from 'body-parser';
 import IndexRoutes from './routes/index.routes';
@@ -19,7 +20,7 @@ import OutputRoutes from './routes/output.routes';
 
 export class App {
     private app: Application;
-    private port: number | string;
+    private port: number | string;    
 
     constructor(port?: number | string) {
         this.app = express();
@@ -28,9 +29,11 @@ export class App {
         dotenv.config();
 
         this.settings();
-        this.middlewares();
+        this.middlewares();        
         this.routes();
     }
+
+
 
     settings() {
         this.app.set('port', this.port || process.env.PORT || 3000);
@@ -50,16 +53,16 @@ export class App {
 
     routes() {
         this.app.use(IndexRoutes);
-        this.app.use('/auth', AuthRoutes);
-        this.app.use('/store', StoreRoutes);
-        this.app.use('/category', CategoryRoutes);
-        this.app.use('/commodity', CommodityRoutes);
-        this.app.use('/provider', ProviderRoutes);
-        this.app.use('/environment', EnvironmentRoutes);
-        this.app.use('/employee', EmployeeRoutes);
-        this.app.use('/store_commodity', StoreCommodityRoutes);         
-        this.app.use('/purchase_order', PurchaseOrderRoutes);         
-        this.app.use('/input', InputRoutes);
-        this.app.use('/output', OutputRoutes);         
+        this.app.use('/auth', cors(), AuthRoutes);
+        this.app.use('/store', cors(), StoreRoutes);
+        this.app.use('/category', cors(), CategoryRoutes);
+        this.app.use('/commodity', cors(), CommodityRoutes);
+        this.app.use('/provider', cors(), ProviderRoutes);
+        this.app.use('/environment', cors(), EnvironmentRoutes);
+        this.app.use('/employee', cors(), EmployeeRoutes);
+        this.app.use('/store_commodity', cors(), StoreCommodityRoutes);         
+        this.app.use('/purchase_order', cors(), PurchaseOrderRoutes);         
+        this.app.use('/input', cors(), InputRoutes);
+        this.app.use('/output', cors(), OutputRoutes);         
     }
 }

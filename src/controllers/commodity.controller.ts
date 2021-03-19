@@ -11,8 +11,10 @@ export async function getCommodities(req: Request, res: Response){
     if(Number.isNaN(offset) || Number.isNaN(state)) return res.status(404).json({ok: false, message: `La variable 'offset' y 'state' son obligatorio!`});
 
     try {
-        const getQuery = `SELECT comm.commodity_id, comm.category_id, (SELECT c.name FROM category c WHERE c.category_id = comm.category_id)category_name, 
-              comm.name, comm.state  FROM commodity comm WHERE state = ${state} LIMIT 250`;
+        const getQuery = `SELECT comm.commodity_id, comm.category_id, 
+            (SELECT c.name FROM category c WHERE c.category_id = comm.category_id)category_name, 
+            comm.name, comm.state FROM commodity comm WHERE state = ${state} LIMIT 250 
+            ORDER BY comm.name ASC`;
 
         return await query(getQuery).then(data => {
             if(!data.ok) return res.status(data.status).json({ok: false, message: data.message})
@@ -30,7 +32,8 @@ export async function getCommodities(req: Request, res: Response){
 export async function createCommodity(req: Request, res: Response) {
     const commodity: CommodityModel = req.body;
 
-    if(commodity.name == null || Number.isNaN(commodity.category_id) || Number.isNaN(commodity.state)) return res.status(404).json({ok: false, message: `La variable 'name', 'category_id' y 'state' son obligatorios!`});
+    if(commodity.name == null || Number.isNaN(commodity.category_id) || Number.isNaN(commodity.state)) 
+        return res.status(404).json({ok: false, message: `La variable 'name', 'category_id' y 'state' son obligatorios!`});
 
     try {
         const commodityName = commodity.name;
@@ -126,7 +129,8 @@ export async function searchCommodity(req: Request, res: Response){
     const searchBy = req.body.search_by;
     const state = Number(req.body.state);
 
-    if(search == null || Number.isNaN(state)) return res.status(404).json({ok: false, message: `La variable 'search' y 'state' son obligatorios!`});
+    if(search == null || Number.isNaN(state)) return res.status(404).json({ok: false, 
+        message: `La variable 'search' y 'state' son obligatorios!`});
 
     try {
 
@@ -138,7 +142,8 @@ export async function searchCommodity(req: Request, res: Response){
             columnName = 'name';
         }
 
-        const querySearch = `SELECT commodity_id, name, category_id FROM commodity WHERE ${columnName} LIKE "%${search}%" AND state = ${state} LIMIT 10`;
+        const querySearch = `SELECT commodity_id, name, category_id FROM commodity 
+            WHERE ${columnName} LIKE "%${search}%" AND state = ${state} LIMIT 10`;
 
         return await query(querySearch).then( data => {
             if(!data.ok) return res.status(data.status).json({ok: false, message: data.message})

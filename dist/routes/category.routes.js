@@ -11,4 +11,6 @@ router.route('/:category_id')
     .delete(category_controller_1.deleteCategory);
 router.route('/search')
     .post(category_controller_1.searchCategory);
+router.route('/with/types/:store_id')
+    .get(category_controller_1.getCategoriesWithCommodityQuantity);
 exports.default = router;

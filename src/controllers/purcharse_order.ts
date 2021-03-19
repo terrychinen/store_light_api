@@ -201,13 +201,14 @@ export async function getPurchaseOrdersWithState(req: Request, res: Response){
         const getQuery = `SELECT purchase_order_id, provider_id, 
         (SELECT name FROM provider WHERE provider_id = po.provider_id)provider_name, 
         employee_id, (SELECT username FROM employee WHERE employee_id = po.employee_id)employee_name, 
-        order_date, expected_date, receive_date, paid_date, cancel_date, total_price, message, updated_by, 
+        order_date, waiting_date, expected_date, receive_date, paid_date, cancel_date, total_price, message, updated_by, 
         (SELECT name FROM employee WHERE employee_id = po.updated_by)updated_name,
         state, state_input FROM purchase_order po WHERE state = ${state} ORDER BY order_date DESC LIMIT 20`;
 
         return await query(getQuery).then(data => {
             for(var i=0; i<data.result[0].length; i++) {                                                          
                 data.result[0][i].order_date = transformDate(data.result[0][i].order_date);
+                data.result[0][i].waiting_date = transformDate(data.result[0][i].waiting_date);
                 data.result[0][i].expected_date = transformDate(data.result[0][i].expected_date); 
                 data.result[0][i].receive_date = transformDate(data.result[0][i].receive_date); 
                 data.result[0][i].paid_date = transformDate(data.result[0][i].paid_date);

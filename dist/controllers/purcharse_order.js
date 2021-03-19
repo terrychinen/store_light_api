@@ -274,10 +274,11 @@ function getPurchaseOrdersWithState(req, res) {
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
-                    getQuery = "SELECT purchase_order_id, provider_id, \n        (SELECT name FROM provider WHERE provider_id = po.provider_id)provider_name, \n        employee_id, (SELECT username FROM employee WHERE employee_id = po.employee_id)employee_name, \n        order_date, expected_date, receive_date, paid_date, cancel_date, total_price, message, updated_by, \n        (SELECT name FROM employee WHERE employee_id = po.updated_by)updated_name,\n        state, state_input FROM purchase_order po WHERE state = " + state + " ORDER BY order_date DESC LIMIT 20";
+                    getQuery = "SELECT purchase_order_id, provider_id, \n        (SELECT name FROM provider WHERE provider_id = po.provider_id)provider_name, \n        employee_id, (SELECT username FROM employee WHERE employee_id = po.employee_id)employee_name, \n        order_date, waiting_date, expected_date, receive_date, paid_date, cancel_date, total_price, message, updated_by, \n        (SELECT name FROM employee WHERE employee_id = po.updated_by)updated_name,\n        state, state_input FROM purchase_order po WHERE state = " + state + " ORDER BY order_date DESC LIMIT 20";
                     return [4 /*yield*/, query_1.query(getQuery).then(function (data) {
                             for (var i = 0; i < data.result[0].length; i++) {
                                 data.result[0][i].order_date = transformDate(data.result[0][i].order_date);
+                                data.result[0][i].waiting_date = transformDate(data.result[0][i].waiting_date);
                                 data.result[0][i].expected_date = transformDate(data.result[0][i].expected_date);
                                 data.result[0][i].receive_date = transformDate(data.result[0][i].receive_date);
                                 data.result[0][i].paid_date = transformDate(data.result[0][i].paid_date);

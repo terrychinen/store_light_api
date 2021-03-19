@@ -13,4 +13,6 @@ router.route('/search')
     .post(input_controller_1.searchInput);
 router.route('/search/bydate')
     .post(input_controller_1.searchInputByDate);
+router.route('/today/detail/bydate')
+    .get(input_controller_1.getTodayInputDetail);
 exports.default = router;

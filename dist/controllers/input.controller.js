@@ -39,7 +39,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getInputDetail = exports.searchInputByDate = exports.searchInput = exports.deleteCategory = exports.updateInput = exports.createInput = exports.getReceiveOrderDetail = exports.getInputs = void 0;
+exports.getTodayInputDetail = exports.getInputDetail = exports.searchInputByDate = exports.searchInput = exports.deleteCategory = exports.updateInput = exports.createInput = exports.getReceiveOrderDetail = exports.getInputs = void 0;
 var query_1 = require("../query/query");
 var dateformat_1 = __importDefault(require("dateformat"));
 //================== OBTENER TODAS LAS ENTRADAS ==================//
@@ -56,7 +56,7 @@ function getInputs(req, res) {
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
-                    getQuery = "SELECT purchase_order_id, employee_id, \n        (SELECT username FROM employee e WHERE e.employee_id = i.employee_id)employee_name, \n        input_date, notes, state FROM input i WHERE state = " + state + " LIMIT 20";
+                    getQuery = "SELECT i.purchase_order_id, i.employee_id, \n        (e.username)employee_name, i.input_date, i.notes, po.provider_id,\n        (p.name)provider_name, i.state FROM input i \n        INNER JOIN employee e ON e.employee_id = i.employee_id\n        INNER JOIN purchase_order po ON po.purchase_order_id = i.purchase_order_id\n        INNER JOIN provider p ON p.provider_id = po.provider_id\n        WHERE i.state = " + state + " ORDER BY i.input_date DESC LIMIT 200";
                     return [4 /*yield*/, query_1.query(getQuery).then(function (data) {
                             if (!data.ok)
                                 return res.status(data.status).json({ ok: false, message: data.message });
@@ -68,6 +68,7 @@ function getInputs(req, res) {
                 case 2: return [2 /*return*/, _a.sent()];
                 case 3:
                     error_1 = _a.sent();
+                    console.log(error_1);
                     return [2 /*return*/, res.status(500).json({ ok: false, message: error_1 })];
                 case 4: return [2 /*return*/];
             }
@@ -335,12 +336,15 @@ function searchInput(req, res) {
                     _a.trys.push([1, 3, , 4]);
                     columnName = '';
                     if (searchBy == 0) {
-                        columnName = 'purchase_order_id';
+                        columnName = 'i.purchase_order_id';
+                    }
+                    else if (searchBy == 1) {
+                        columnName = 'i.notes';
                     }
                     else {
-                        columnName = 'notes';
+                        columnName = 'p.name';
                     }
-                    querySearch = "SELECT purchase_order_id, employee_id, \n        (SELECT username FROM employee e WHERE e.employee_id = i.employee_id)employee_name, \n        input_date, notes, state FROM input i WHERE " + columnName + " LIKE \"%" + search + "%\" AND state = " + state + " LIMIT 20";
+                    querySearch = "SELECT i.purchase_order_id, i.employee_id, \n        (e.username)employee_name, i.input_date, i.notes, po.provider_id,  \n        (p.name)provider_name, i.state FROM input i \n        INNER JOIN employee e ON e.employee_id = i.employee_id\n        INNER JOIN purchase_order po ON po.purchase_order_id = i.purchase_order_id\n        INNER JOIN provider p ON p.provider_id = po.provider_id\n        WHERE " + columnName + " LIKE \"%" + search + "%\" AND state = " + state + " LIMIT 20";
                     return [4 /*yield*/, query_1.query(querySearch).then(function (data) {
                             if (!data.ok)
                                 return res.status(data.status).json({ ok: false, message: data.message });
@@ -373,7 +377,7 @@ function searchInputByDate(req, res) {
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
-                    querySearch = "SELECT purchase_order_id, employee_id, \n        (SELECT username FROM employee e WHERE e.employee_id = i.employee_id)employee_name, \n        input_date, notes, state FROM input i WHERE input_date LIKE \"%" + search + "%\" AND state = " + state + " LIMIT 50";
+                    querySearch = "SELECT i.purchase_order_id, i.employee_id, \n        (e.username)employee_name, i.input_date, i.notes, po.provider_id, \n        (p.name)provider_name, i.state FROM input i\n        INNER JOIN employee e ON e.employee_id = i.employee_id\n        INNER JOIN purchase_order po ON po.purchase_order_id = i.purchase_order_id\n        INNER JOIN provider p ON p.provider_id = po.provider_id  \n        WHERE i.input_date LIKE \"%" + search + "%\" AND i.state = " + state + " LIMIT 100";
                     return [4 /*yield*/, query_1.query(querySearch).then(function (data) {
                             if (!data.ok)
                                 return res.status(data.status).json({ ok: false, message: data.message });
@@ -406,7 +410,7 @@ function getInputDetail(req, res) {
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
-                    getQuery = "SELECT purchase_order_id,\n        store_id, (SELECT name FROM store WHERE store_id = i.store_id)store_name, \n        commodity_id, (SELECT name FROM commodity WHERE commodity_id = i.commodity_id)commodity_name, \n        quantity FROM input_detail i WHERE purchase_order_id = " + purchaseOrderID;
+                    getQuery = "SELECT i.purchase_order_id, i.store_id, \n        (s.name)store_name, i.commodity_id, (c.name)commodity_name, \n        i.quantity FROM input_detail i\n        INNER JOIN store s ON s.store_id = i.store_id\n        INNER JOIN commodity c ON c.commodity_id = i.commodity_id \n        WHERE purchase_order_id = " + purchaseOrderID + " ORDER BY c.name ASC";
                     return [4 /*yield*/, query_1.query(getQuery).then(function (data) {
                             if (!data.ok)
                                 return res.status(data.status).json({ ok: false, message: data.message });
@@ -422,6 +426,41 @@ function getInputDetail(req, res) {
     });
 }
 exports.getInputDetail = getInputDetail;
+//================== OBTENER TODOS LOS DETALLES DE LA ENTRADA POR LA FECHA ACTUAL ==================//
+function getTodayInputDetail(req, res) {
+    return __awaiter(this, void 0, void 0, function () {
+        var inputDate, getQuery, error_9;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    inputDate = req.query.input_date;
+                    if (inputDate == null)
+                        return [2 /*return*/, res.status(404).json({ ok: false, message: "La variable 'inputDate' es obligatorio!" })];
+                    _a.label = 1;
+                case 1:
+                    _a.trys.push([1, 3, , 4]);
+                    getQuery = "SELECT id.purchase_order_id, i.employee_id, \n        e.username, id.store_id, (s.name)store_name, id.commodity_id, \n        (c.name)commodity_name, id.quantity, i.input_date FROM input_detail id\n        INNER JOIN store s ON s.store_id = id.store_id\n        INNER JOIN commodity c ON c.commodity_id = id.commodity_id\n        INNER JOIN input i ON i.purchase_order_id = id.purchase_order_id\n        INNER JOIN employee e ON e.employee_id = i.employee_id \n        WHERE i.input_date LIKE \"%" + inputDate + "%\"";
+                    return [4 /*yield*/, query_1.query(getQuery).then(function (data) {
+                            if (!data.ok) {
+                                console.log(data.message);
+                                return res.status(data.status).json({ ok: false, message: data.message });
+                            }
+                            for (var i = 0; i < data.result[0].length; i++) {
+                                data.result[0][i].input_date = transformDate(data.result[0][i].input_date);
+                            }
+                            return res.status(data.status).json({ ok: true, message: data.message, result: data.result[0] });
+                        })];
+                case 2: return [2 /*return*/, _a.sent()];
+                case 3:
+                    error_9 = _a.sent();
+                    console.log(error_9);
+                    return [2 /*return*/, res.status(500).json({ ok: false, message: error_9 })];
+                case 4: return [2 /*return*/];
+            }
+        });
+    });
+}
+exports.getTodayInputDetail = getTodayInputDetail;
 function checkIfEmployeeAndPurchaseOrderExists(res, purchaseOrderID, employeeID) {
     return __awaiter(this, void 0, void 0, function () {
         var checkIfPurchaseOrderExists, checkIfEmployeeExists;

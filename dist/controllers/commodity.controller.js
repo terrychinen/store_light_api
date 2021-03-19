@@ -52,7 +52,7 @@ function getCommodities(req, res) {
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
-                    getQuery = "SELECT comm.commodity_id, comm.category_id, (SELECT c.name FROM category c WHERE c.category_id = comm.category_id)category_name, \n              comm.name, comm.state  FROM commodity comm WHERE state = " + state + " LIMIT 250";
+                    getQuery = "SELECT comm.commodity_id, comm.category_id, \n            (SELECT c.name FROM category c WHERE c.category_id = comm.category_id)category_name, \n            comm.name, comm.state FROM commodity comm WHERE state = " + state + " LIMIT 250 \n            ORDER BY comm.name ASC";
                     return [4 /*yield*/, query_1.query(getQuery).then(function (data) {
                             if (!data.ok)
                                 return res.status(data.status).json({ ok: false, message: data.message });
@@ -240,7 +240,7 @@ function searchCommodity(req, res) {
                     else if (searchBy == 1) {
                         columnName = 'name';
                     }
-                    querySearch = "SELECT commodity_id, name, category_id FROM commodity WHERE " + columnName + " LIKE \"%" + search + "%\" AND state = " + state + " LIMIT 10";
+                    querySearch = "SELECT commodity_id, name, category_id FROM commodity \n            WHERE " + columnName + " LIKE \"%" + search + "%\" AND state = " + state + " LIMIT 10";
                     return [4 /*yield*/, query_1.query(querySearch).then(function (data) {
                             if (!data.ok)
                                 return res.status(data.status).json({ ok: false, message: data.message });

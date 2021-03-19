@@ -195,7 +195,7 @@ export async function searchOutput(req: Request, res: Response){
             INNER JOIN environment env ON env.environment_id = o.environment_id
             INNER JOIN employee emp ON emp.employee_id = o.employee_gives
             INNER JOIN employee empp ON empp.employee_id = o.employee_receives
-            WHERE ${columnName} LIKE "%${search}%" AND o.state = ${state} ORDER BY o.date_output DESC LIMIT 50`;
+            WHERE ${columnName} LIKE "%${search}%" AND o.state = ${state} ORDER BY o.date_output DESC LIMIT 100`;
 
         return await query(querySearch).then( data => {
             if(!data.ok) return res.status(data.status).json({ok: false, message: data.message});

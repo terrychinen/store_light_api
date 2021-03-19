@@ -64,8 +64,8 @@ export async function createStoreCommodity(req: Request, res: Response, next: Ne
         return res.status(500).json({ok: false, message: error});
     }
 }
-    
-    
+
+  
 
 //================== ACTUALIZAR ALMACENES-MERCANCIAS ==================//
 export async function updateStoreCommodity(req: Request, res: Response) {
@@ -93,6 +93,7 @@ export async function updateStoreCommodity(req: Request, res: Response) {
         return res.status(500).json({ok: false, message: error});
     }   
 }
+
 
 
 //================== OBTENER TODAS LAS MERCANCIAS POR EL ID DEL ALMACEN ==================//
@@ -142,20 +143,23 @@ export async function getCommodityByStoreIDAndCommdotyId(req: Request, res: Resp
 }
    
 
+
+
 //================== OBTENER TODAS LAS MERCANCIAS CON STOCK MIN ==================//
-export async function getStoresCommoditiesWithStockMin(req: Request, res: Response){
+export async function getStoresCommoditiesWithStockMin(req: Request, res: Response) {
     const offset = Number(req.query.offset);
     const state = Number(req.query.state);
 
     if(Number.isNaN(offset) || Number.isNaN(state)) return res.status(404).json({ok: false, message: `La variable 'offset' y 'state' son obligatorio!`});
 
     try {
-        const getQuery = `SELECT sc.store_id, (s.name)store_name, sc.commodity_id, (c.name)commodity_name, 
-            sc.stock, sc.stock_min,
+        const getQuery = `SELECT sc.store_id, (s.name)store_name, sc.commodity_id, (c.name)commodity_name,
+            cate.category_id, cate.name, sc.stock, sc.stock_min,
 		    (SELECT SUM(stock) FROM store_commodity WHERE commodity_id = sc.commodity_id)stock_total,
             sc.state FROM store_commodity sc
             INNER JOIN store s ON s.store_id = sc.store_id
             INNER JOIN commodity c ON c.commodity_id = sc.commodity_id
+            INNER JOIN category cate on cate.category_id = c.category_id
             WHERE stock <= stock_min
             ORDER BY s.name ASC, c.name ASC`;
         
@@ -169,6 +173,35 @@ export async function getStoresCommoditiesWithStockMin(req: Request, res: Respon
     }
 }
 
+
+
+
+//================== OBTENER TODAS LAS MERCANCIAS POR EL ID DEL ALMACEN Y DE LA CATEGORIA ==================//
+export async function getAllCommoditiesByStoreIDAndCommodityID(req: Request, res: Response){
+    const storeID = Number(req.params.store_id);
+    const categoryID = Number(req.params.category_id);
+
+    if(Number.isNaN(storeID) || Number.isNaN(categoryID)) return res.status(404).json({ok: false, message: `La variable 'storeID' y 'categoryID' son obligatorio!`});
+
+    try {
+        const getQuery = `SELECT sc.commodity_id, (comm.name)commodity_name, 
+        (cate.name)category_name, sc.stock, sc.stock_min,
+        (SELECT SUM(stock) FROM store_commodity tt WHERE tt.commodity_id = sc.commodity_id)stock_total 
+        FROM store_commodity sc
+        INNER JOIN commodity comm ON comm.commodity_id = sc.commodity_id 
+        INNER JOIN category cate ON cate.category_id = comm.category_id
+        WHERE sc.store_id = ${storeID} AND comm.category_id = ${categoryID} 
+        ORDER BY comm.name ASC`;
+        
+        return await query(getQuery).then(data => {
+            if(!data.ok) return res.status(data.status).json({ok: false, message: data.message})
+            
+            return res.status(data.status).json({ok: true, message: data.message, result: data.result[0]});
+        });
+    }catch(error) {
+        return res.status(500).json({ok: false, message: error});
+    }
+}
 
 
 

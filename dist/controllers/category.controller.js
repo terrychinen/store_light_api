@@ -36,7 +36,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.searchCategory = exports.deleteCategory = exports.updateCategory = exports.createCategory = exports.getCategories = void 0;
+exports.searchCategory = exports.getCategoriesWithCommodityQuantity = exports.deleteCategory = exports.updateCategory = exports.createCategory = exports.getCategories = void 0;
 var query_1 = require("../query/query");
 //================== OBTENER TODAS LAS CATEGORIAS ==================//
 function getCategories(req, res) {
@@ -52,7 +52,7 @@ function getCategories(req, res) {
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
-                    getQuery = "SELECT * FROM category WHERE state = " + state + " LIMIT 20";
+                    getQuery = "SELECT * FROM category WHERE state = " + state + " ORDER BY name ASC";
                     return [4 /*yield*/, query_1.query(getQuery).then(function (data) {
                             if (!data.ok)
                                 return res.status(data.status).json({ ok: false, message: data.message });
@@ -218,10 +218,41 @@ function deleteCategory(req, res) {
     });
 }
 exports.deleteCategory = deleteCategory;
+//================== OBTENER TODAS LAS CATEGORIAS CON LAS CANTIDADES DE TIPOS DE MERCANCIAS ==================//
+function getCategoriesWithCommodityQuantity(req, res) {
+    return __awaiter(this, void 0, void 0, function () {
+        var storeID, offset, state, getQuery, error_5;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    storeID = req.params.store_id;
+                    offset = Number(req.query.offset);
+                    state = Number(req.query.state);
+                    if (Number.isNaN(storeID) || Number.isNaN(offset) || Number.isNaN(state))
+                        return [2 /*return*/, res.status(404).json({ ok: false, message: "La variable 'offset' y 'state' son obligatorio!" })];
+                    _a.label = 1;
+                case 1:
+                    _a.trys.push([1, 3, , 4]);
+                    getQuery = "SELECT DISTINCT(cate.category_id), cate.name, cate.state,\n             (SELECT COUNT(commodity_id) FROM store_commodity sc \n                WHERE (SELECT category_id FROM commodity comm WHERE comm.commodity_id = sc.commodity_id) = cate.category_id)type  \n            FROM store_commodity sc\n            INNER JOIN commodity comm ON comm.commodity_id = sc.commodity_id\n            INNER JOIN category cate ON cate.category_id = comm.category_id\n            WHERE store_id = " + storeID + " ORDER BY cate.name ASC";
+                    return [4 /*yield*/, query_1.query(getQuery).then(function (data) {
+                            if (!data.ok)
+                                return res.status(data.status).json({ ok: false, message: data.message });
+                            return res.status(data.status).json({ ok: true, message: data.message, result: data.result[0] });
+                        })];
+                case 2: return [2 /*return*/, _a.sent()];
+                case 3:
+                    error_5 = _a.sent();
+                    return [2 /*return*/, res.status(500).json({ ok: false, message: error_5 })];
+                case 4: return [2 /*return*/];
+            }
+        });
+    });
+}
+exports.getCategoriesWithCommodityQuantity = getCategoriesWithCommodityQuantity;
 //================== BUSCAR CATEGORIA POR SU NOMBRE  ==================//
 function searchCategory(req, res) {
     return __awaiter(this, void 0, void 0, function () {
-        var search, searchBy, state, columnName, querySearch, error_5;
+        var search, searchBy, state, columnName, querySearch, error_6;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -248,8 +279,8 @@ function searchCategory(req, res) {
                         })];
                 case 2: return [2 /*return*/, _a.sent()];
                 case 3:
-                    error_5 = _a.sent();
-                    return [2 /*return*/, res.status(500).json({ ok: false, message: error_5 })];
+                    error_6 = _a.sent();
+                    return [2 /*return*/, res.status(500).json({ ok: false, message: error_6 })];
                 case 4: return [2 /*return*/];
             }
         });
