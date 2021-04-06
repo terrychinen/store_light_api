@@ -1,7 +1,8 @@
 import { Router } from 'express';
 import { getStoresCommodities, getCommoditiesByStoreID, getCommodityByStoreIDAndCommdotyId, 
             createStoreCommodity, updateStoreCommodity, 
-            getStoresCommoditiesWithStockMin, getAllCommoditiesByStoreIDAndCommodityID } from '../controllers/store_commodity.controller';
+            getStoresCommoditiesWithStockMin, getAllCommoditiesByStoreIDAndCommodityID, searchStoreCommodity,
+            getByStoreIdCommodityId } from '../controllers/store_commodity.controller';
 
 const router = Router();
 
@@ -26,5 +27,12 @@ router.route('/store/category/:store_id/:category_id')
 
 router.route('/stock_min')
     .get(getStoresCommoditiesWithStockMin);
+
+router.route('/search/commodity')
+    .post(searchStoreCommodity);
+
+
+router.route('/phone/check/by')
+    .get(getByStoreIdCommodityId);
 
 export default router;

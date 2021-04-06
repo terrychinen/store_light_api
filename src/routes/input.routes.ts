@@ -1,5 +1,6 @@
 import { Router } from 'express';
-import { getInputs, createInput, getInputDetail, updateInput, searchInput, searchInputByDate, getTodayInputDetail } from '../controllers/input.controller';
+import { getInputs, createInput, getInputDetail, updateInput, searchInput, searchInputByDate, getInputDetailByDate, 
+            searchInputByCommodity, searchInputByOrder, getInputsPhone, getInput, createInputPhone } from '../controllers/input.controller';
 
 const router = Router();
 
@@ -9,16 +10,26 @@ router.route('/')
     .post(createInput);
 
 router.route('/:purchase_id')
-    .get(getInputDetail) 
+    .get(getInputDetail)
+    .post(getInput)
     .put(updateInput);
 
-router.route('/search')
+router.route('/search')   
     .post(searchInput);
 
+
+router.route('/phone/create')
+    .post(createInputPhone);
+
+router.route('/phone/order/search')
+    .get(getInputsPhone)
+    .post(searchInputByOrder);
+
+router.route('/phone/detail/search')
+    .get(getInputDetailByDate)
+    .post(searchInputByCommodity);
+
 router.route('/search/bydate')
-    .post(searchInputByDate);
-    
-router.route('/today/detail/bydate')
-    .get(getTodayInputDetail);       
+    .post(searchInputByDate);           
 
 export default router;

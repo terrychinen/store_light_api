@@ -12,7 +12,7 @@ export async function getEmployees(req: Request, res: Response){
     if(Number.isNaN(offset) || Number.isNaN(state)) return res.status(404).json({ok: false, message: `La variable 'offset' y 'state' son obligatorio!`});
 
     try {
-        const getQuery = `SELECT employee_id, name, username, state FROM employee WHERE state = ${state}`;
+        const getQuery = `SELECT employee_id, name, username, state FROM employee WHERE state = ${state} ORDER BY username ASC`;
         
         return await query(getQuery).then(data => {
             if(!data.ok) return res.status(data.status).json({ok: false, message: data.message})

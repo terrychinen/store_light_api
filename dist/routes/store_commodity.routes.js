@@ -15,4 +15,8 @@ router.route('/store/category/:store_id/:category_id')
     .get(store_commodity_controller_1.getAllCommoditiesByStoreIDAndCommodityID);
 router.route('/stock_min')
     .get(store_commodity_controller_1.getStoresCommoditiesWithStockMin);
+router.route('/search/commodity')
+    .post(store_commodity_controller_1.searchStoreCommodity);
+router.route('/phone/check/by')
+    .get(store_commodity_controller_1.getByStoreIdCommodityId);
 exports.default = router;

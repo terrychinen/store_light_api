@@ -11,4 +11,6 @@ router.route('/:purchase_id')
     .put(purcharse_order_1.updatePurchaseOrder);
 router.route('/with/state')
     .get(purcharse_order_1.getPurchaseOrdersWithState);
+router.route('/phone/search/bydate')
+    .get(purcharse_order_1.getPurchaseOrderByDatePhone);
 exports.default = router;

@@ -10,7 +10,8 @@ export async function getOutputs(req: Request, res: Response){
     const offset = Number(req.query.offset);
     const state = Number(req.query.state);
 
-    if(Number.isNaN(offset) || Number.isNaN(state)) return res.status(404).json({ok: false, message: `La variable 'offset' y 'state' son obligatorio!`});
+    if(Number.isNaN(offset) || Number.isNaN(state)) 
+        return res.status(404).json({ok: false, message: `La variable 'offset' y 'state' son obligatorio!`});
 
     try {
         const getQuery = `SELECT output_id, store_id,
@@ -72,9 +73,9 @@ export async function createOutput(req: Request, res: Response) {
                 const stock: number = Number(getStockQuery.result[0][0].stock);
                 const quantity: number = Number(output.quantity);
 
-                const totalStock: number = stock - quantity;            
+                const totalStock: number = stock - quantity;
 
-                const updateStockQuery = `UPDATE store_commodity SET stock=${totalStock} WHERE 
+                const updateStockQuery = `UPDATE store_commodity SET stock=${totalStock} WHERE
                     store_id=${output.store_id} AND commodity_id=${output.commodity_id}`;
                     
                     return await query(updateStockQuery).then(async dataUpdate => {
@@ -195,7 +196,89 @@ export async function searchOutput(req: Request, res: Response){
             INNER JOIN environment env ON env.environment_id = o.environment_id
             INNER JOIN employee emp ON emp.employee_id = o.employee_gives
             INNER JOIN employee empp ON empp.employee_id = o.employee_receives
-            WHERE ${columnName} LIKE "%${search}%" AND o.state = ${state} ORDER BY o.date_output DESC LIMIT 100`;
+            WHERE ${columnName} LIKE "%${search}%" AND o.state = ${state} ORDER BY o.date_output DESC LIMIT 20`;
+
+        return await query(querySearch).then( data => {
+            if(!data.ok) return res.status(data.status).json({ok: false, message: data.message});
+
+            var outputList: OutputModel[] = data.result[0];
+
+            for(var i=0; i<outputList.length; i++) {                                                          
+                data.result[0][i].date_output = transformDate(data.result[0][i].date_output);
+            }
+
+            return res.status(data.status).json({ok: true, message: data.message, result: data.result[0]});
+        });
+
+    }catch(error) {
+        console.log(error);
+        console.log('Data: ');        
+        return res.status(500).json({ok: false, message: error});
+    }
+}
+
+
+//================== OBTENER TODAS LAS SALIDAS POR FECHA ==================//
+export async function getOutputsByDate(req: Request, res: Response){
+    const offset = Number(req.query.offset);
+    const state = Number(req.query.state);
+    const dateOutput = req.query.date_output;
+
+    if(Number.isNaN(offset) || Number.isNaN(state)) 
+        return res.status(404).json({ok: false, message: `La variable 'offset' y 'state' son obligatorio!`});
+
+    try {
+        const getQuery = `SELECT o.output_id, o.store_id, (s.name)store_name, c.commodity_id, 
+        (c.name)commodity_name, o.environment_id, (env.name)environment_name, o.employee_gives,
+        (emp.username)employee_gives_name, o.employee_receives, (empp.username)employee_receives_name,
+        o.quantity, o.date_output, o.notes, o.state FROM output o 
+        INNER JOIN store s ON s.store_id = o.store_id
+        INNER JOIN commodity c ON c.commodity_id = o.commodity_id
+        INNER JOIN environment env ON env.environment_id = o.environment_id
+        INNER JOIN employee emp ON emp.employee_id = o.employee_gives
+        INNER JOIN employee empp ON empp.employee_id = o.employee_receives
+        WHERE o.date_output LIKE "%${dateOutput}%" AND o.state = ${state} ORDER BY o.date_output DESC LIMIT 100`;        
+      
+        return await query(getQuery).then(data => {
+            if(!data.ok) {
+                console.log(data.message);                
+                return res.status(data.status).json({ok: false, message: data.message});
+            }
+
+            var outputList: OutputModel[] = data.result[0];
+
+            for(var i=0; i<outputList.length; i++) {                                                          
+                data.result[0][i].date_output = transformDate(data.result[0][i].date_output);
+            }
+            
+            return res.status(data.status).json({ok: true, message: data.message, result: data.result[0]});
+        });
+    }catch(error) {
+        console.log(error);    
+        return res.status(500).json({ok: false, message: error});
+    }
+}
+
+
+//================== BUSCAR SALIIDA POR FECHA ==================//
+export async function searchOutputByDate(req: Request, res: Response){
+    const search = req.body.search;
+    const dateOutput = req.body.date_output;
+    const state = Number(req.body.state);
+
+    if(Number.isNaN(state)) return res.status(404).json({ok: false, message: `La variable 'state' es obligatorio!`});
+
+    try {           
+        const querySearch = `SELECT o.output_id, o.store_id, (s.name)store_name, c.commodity_id, 
+            (c.name)commodity_name, o.environment_id, (env.name)environment_name, o.employee_gives,
+            (emp.username)employee_gives_name, o.employee_receives, (empp.username)employee_receives_name,
+            o.quantity, o.date_output, o.notes, o.state FROM output o 
+            INNER JOIN store s ON s.store_id = o.store_id
+            INNER JOIN commodity c ON c.commodity_id = o.commodity_id
+            INNER JOIN environment env ON env.environment_id = o.environment_id
+            INNER JOIN employee emp ON emp.employee_id = o.employee_gives
+            INNER JOIN employee empp ON empp.employee_id = o.employee_receives
+            WHERE c.name LIKE "%${search}%" AND o.date_output = "${dateOutput}" AND o.state = ${state} ORDER BY o.date_output DESC LIMIT 20`;
 
         return await query(querySearch).then( data => {
             if(!data.ok) return res.status(data.status).json({ok: false, message: data.message});

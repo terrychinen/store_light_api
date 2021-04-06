@@ -36,7 +36,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getAllCommoditiesByStoreIDAndCommodityID = exports.getStoresCommoditiesWithStockMin = exports.getCommodityByStoreIDAndCommdotyId = exports.getCommoditiesByStoreID = exports.updateStoreCommodity = exports.createStoreCommodity = exports.getStoresCommodities = void 0;
+exports.getByStoreIdCommodityId = exports.searchStoreCommodity = exports.getAllCommoditiesByStoreIDAndCommodityID = exports.getStoresCommoditiesWithStockMin = exports.getCommodityByStoreIDAndCommdotyId = exports.getCommoditiesByStoreID = exports.updateStoreCommodity = exports.createStoreCommodity = exports.getStoresCommodities = void 0;
 var query_1 = require("../query/query");
 //================== OBTENER TODAS LOS ALMACENES-MERCANCIAS ==================//
 function getStoresCommodities(req, res) {
@@ -218,7 +218,7 @@ function getStoresCommoditiesWithStockMin(req, res) {
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
-                    getQuery = "SELECT sc.store_id, (s.name)store_name, sc.commodity_id, (c.name)commodity_name,\n            cate.category_id, cate.name, sc.stock, sc.stock_min,\n\t\t    (SELECT SUM(stock) FROM store_commodity WHERE commodity_id = sc.commodity_id)stock_total,\n            sc.state FROM store_commodity sc\n            INNER JOIN store s ON s.store_id = sc.store_id\n            INNER JOIN commodity c ON c.commodity_id = sc.commodity_id\n            INNER JOIN category cate on cate.category_id = c.category_id\n            WHERE stock <= stock_min\n            ORDER BY s.name ASC, c.name ASC";
+                    getQuery = "SELECT sc.store_id, (s.name)store_name, sc.commodity_id, (c.name)commodity_name,\n            cate.category_id, (cate.name)category_name, sc.stock, sc.stock_min,\n\t\t    (SELECT SUM(stock) FROM store_commodity WHERE commodity_id = sc.commodity_id)stock_total,\n            sc.state FROM store_commodity sc\n            INNER JOIN store s ON s.store_id = sc.store_id\n            INNER JOIN commodity c ON c.commodity_id = sc.commodity_id\n            INNER JOIN category cate on cate.category_id = c.category_id\n            WHERE stock <= stock_min\n            ORDER BY s.name ASC, c.name ASC";
                     return [4 /*yield*/, query_1.query(getQuery).then(function (data) {
                             if (!data.ok)
                                 return res.status(data.status).json({ ok: false, message: data.message });
@@ -264,6 +264,77 @@ function getAllCommoditiesByStoreIDAndCommodityID(req, res) {
     });
 }
 exports.getAllCommoditiesByStoreIDAndCommodityID = getAllCommoditiesByStoreIDAndCommodityID;
+//================== BUSCAR MERCANCIA - ALMACEN  ==================//
+function searchStoreCommodity(req, res) {
+    return __awaiter(this, void 0, void 0, function () {
+        var search, searchBy, state, columnName, querySearch, error_8;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    search = req.body.search;
+                    searchBy = req.body.search_by;
+                    state = Number(req.body.state);
+                    if (search == null || Number.isNaN(state))
+                        return [2 /*return*/, res.status(404).json({ ok: false, message: "La variable 'search' y 'state' son obligatorios!" })];
+                    _a.label = 1;
+                case 1:
+                    _a.trys.push([1, 3, , 4]);
+                    columnName = '';
+                    if (searchBy == 0) {
+                        columnName = 'sc.commodity_id';
+                    }
+                    else if (searchBy == 1) {
+                        columnName = 'comm.name';
+                    }
+                    querySearch = "SELECT sc.commodity_id, (comm.name)commodity_name, comm.category_id,\n            (cate.name)category_name, sc.store_id, (s.name)store_name, sc.stock, sc.stock_min,\n            (SELECT SUM(stock) FROM store_commodity WHERE commodity_id = sc.commodity_id)stock_total, \n            sc.state FROM store_commodity sc\n            INNER JOIN store s ON s.store_id = sc.store_id\n            INNER JOIN commodity comm ON comm.commodity_id = sc.commodity_id\n            INNER JOIN category cate ON cate.category_id = comm.category_id\n            WHERE " + columnName + " LIKE \"%" + search + "%\" AND sc.state = " + state + "\n            ORDER BY comm.name ASC LIMIT 50";
+                    return [4 /*yield*/, query_1.query(querySearch).then(function (data) {
+                            if (!data.ok)
+                                return res.status(data.status).json({ ok: false, message: data.message });
+                            return res.status(data.status).json({ ok: true, message: data.message, result: data.result[0] });
+                        })];
+                case 2: return [2 /*return*/, _a.sent()];
+                case 3:
+                    error_8 = _a.sent();
+                    return [2 /*return*/, res.status(500).json({ ok: false, message: error_8 })];
+                case 4: return [2 /*return*/];
+            }
+        });
+    });
+}
+exports.searchStoreCommodity = searchStoreCommodity;
+//================== OBTENER TODAS LAS MERCANCIAS POR EL ID DEL ALMACEN ==================//
+function getByStoreIdCommodityId(req, res) {
+    return __awaiter(this, void 0, void 0, function () {
+        var storeID, commodityID, getQuery, error_9;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    storeID = Number(req.query.store_id);
+                    commodityID = Number(req.query.commodity_id);
+                    if (Number.isNaN(storeID) || Number.isNaN(commodityID))
+                        return [2 /*return*/, res.status(404).json({ ok: false, message: "La variable 'storeID' y 'commodityID' son obligatorio!" })];
+                    _a.label = 1;
+                case 1:
+                    _a.trys.push([1, 3, , 4]);
+                    getQuery = "SELECT sc.store_id, (s.name)store_name, sc.commodity_id, (c.name)commodity_name,\n            sc.stock, sc.stock_min, sc.state FROM store_commodity sc \n            INNER JOIN commodity c ON c.commodity_id = sc.commodity_id\n            INNER JOIN store s ON s.store_id = sc.store_id\n            WHERE sc.store_id = " + storeID + " AND sc.commodity_id = " + commodityID + " LIMIT 1";
+                    return [4 /*yield*/, query_1.query(getQuery).then(function (data) {
+                            if (!data.ok) {
+                                console.log(data.message);
+                                return res.status(data.status).json({ ok: false, message: data.message });
+                            }
+                            return res.status(data.status).json({ ok: true, message: data.message, result: data.result[0] });
+                        })];
+                case 2: return [2 /*return*/, _a.sent()];
+                case 3:
+                    error_9 = _a.sent();
+                    console.log(error_9);
+                    return [2 /*return*/, res.status(500).json({ ok: false, message: error_9 })];
+                case 4: return [2 /*return*/];
+            }
+        });
+    });
+}
+exports.getByStoreIdCommodityId = getByStoreIdCommodityId;
 function checkIfCommodityAndStoreExists(res, commodityID, storeID) {
     return __awaiter(this, void 0, void 0, function () {
         var checkIfCommodityExists, checkIfStoreExists;

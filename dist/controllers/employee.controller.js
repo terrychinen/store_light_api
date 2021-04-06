@@ -56,7 +56,7 @@ function getEmployees(req, res) {
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
-                    getQuery = "SELECT employee_id, name, username, state FROM employee WHERE state = " + state;
+                    getQuery = "SELECT employee_id, name, username, state FROM employee WHERE state = " + state + " ORDER BY username ASC";
                     return [4 /*yield*/, query_1.query(getQuery).then(function (data) {
                             if (!data.ok)
                                 return res.status(data.status).json({ ok: false, message: data.message });

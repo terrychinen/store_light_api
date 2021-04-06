@@ -39,9 +39,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getPurchaseOrdersWithState = exports.updatePurchaseOrder = exports.createPurchaseOrder = exports.getPurchaseOrderDetail = exports.getPurchaseOrders = void 0;
-var query_1 = require("../query/query");
+exports.getPurchaseOrderByDatePhone = exports.getPurchaseOrdersWithState = exports.updatePurchaseOrder = exports.createPurchaseOrder = exports.getPurchaseOrderDetail = exports.getPurchaseOrders = void 0;
 var dateformat_1 = __importDefault(require("dateformat"));
+var query_1 = require("../query/query");
 //================== OBTENER TODOS LOS ORDENES DE PEDIDOS ==================//
 function getPurchaseOrders(req, res) {
     return __awaiter(this, void 0, void 0, function () {
@@ -93,13 +93,12 @@ function getPurchaseOrderDetail(req, res) {
                 case 0:
                     purchaseOrderID = req.params.purchase_id;
                     offset = Number(req.query.offset);
-                    //  const state = Number(req.query.state);
                     if (Number.isNaN(offset))
                         return [2 /*return*/, res.status(404).json({ ok: false, message: "La variable 'offset' es obligatorio!" })];
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
-                    getQuery = "SELECT purchase_order_id, commodity_id, \n        (SELECT name FROM commodity WHERE commodity_id = pod.commodity_id)name, \n        quantity, unit_price, total_price FROM purchase_order_detail pod WHERE purchase_order_id = " + purchaseOrderID;
+                    getQuery = "SELECT pod.purchase_order_id, pod.commodity_id, \n        comm.name, pod.quantity, pod.unit_price, pod.total_price \n        FROM purchase_order_detail pod \n        INNER JOIN commodity comm ON comm.commodity_id = pod.commodity_id\n        WHERE pod.purchase_order_id = " + purchaseOrderID + " ORDER BY comm.name ASC";
                     return [4 /*yield*/, query_1.query(getQuery).then(function (data) {
                             if (!data.ok)
                                 return res.status(data.status).json({ ok: false, message: data.message });
@@ -297,3 +296,28 @@ function getPurchaseOrdersWithState(req, res) {
     });
 }
 exports.getPurchaseOrdersWithState = getPurchaseOrdersWithState;
+function getPurchaseOrderByDatePhone(req, res) {
+    return __awaiter(this, void 0, void 0, function () {
+        var getQuery, error_6;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    _a.trys.push([0, 2, , 3]);
+                    getQuery = "SELECT purchase_order_id, provider_id, \n        (SELECT name FROM provider WHERE provider_id = po.provider_id)provider_name, \n        employee_id, (SELECT username FROM employee WHERE employee_id = po.employee_id)employee_name,\n        order_date, receive_date, paid_date, cancel_date, total_price, message, updated_by, \n        (SELECT name FROM employee WHERE employee_id = po.updated_by)updated_name,\n        state, state_input FROM purchase_order po WHERE state_input = 0 ORDER BY receive_date DESC";
+                    return [4 /*yield*/, query_1.query(getQuery).then(function (data) {
+                            if (!data.ok) {
+                                console.log(data.message);
+                                return res.status(data.status).json({ ok: false, message: data.message });
+                            }
+                            return res.status(data.status).json({ ok: true, message: data.message, result: data.result[0] });
+                        })];
+                case 1: return [2 /*return*/, _a.sent()];
+                case 2:
+                    error_6 = _a.sent();
+                    return [2 /*return*/, res.status(500).json({ ok: false, message: error_6 })];
+                case 3: return [2 /*return*/];
+            }
+        });
+    });
+}
+exports.getPurchaseOrderByDatePhone = getPurchaseOrderByDatePhone;

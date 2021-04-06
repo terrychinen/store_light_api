@@ -12,4 +12,7 @@ router.route('/stock/:output_id')
     .put(output_controller_1.updateStock);
 router.route('/search')
     .post(output_controller_1.searchOutput);
+router.route('/phone/search')
+    .get(output_controller_1.getOutputsByDate)
+    .post(output_controller_1.searchOutputByDate);
 exports.default = router;

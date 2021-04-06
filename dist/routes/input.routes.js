@@ -8,11 +8,18 @@ router.route('/')
     .post(input_controller_1.createInput);
 router.route('/:purchase_id')
     .get(input_controller_1.getInputDetail)
+    .post(input_controller_1.getInput)
     .put(input_controller_1.updateInput);
 router.route('/search')
     .post(input_controller_1.searchInput);
+router.route('/phone/create')
+    .post(input_controller_1.createInputPhone);
+router.route('/phone/order/search')
+    .get(input_controller_1.getInputsPhone)
+    .post(input_controller_1.searchInputByOrder);
+router.route('/phone/detail/search')
+    .get(input_controller_1.getInputDetailByDate)
+    .post(input_controller_1.searchInputByCommodity);
 router.route('/search/bydate')
     .post(input_controller_1.searchInputByDate);
-router.route('/today/detail/bydate')
-    .get(input_controller_1.getTodayInputDetail);
 exports.default = router;

@@ -1,7 +1,8 @@
+import dateformat from 'dateformat';
 import { query } from '../query/query';
 import { Request, Response } from 'express';
 import { PurchaseOrderModel } from '../models/purchase_order.model';
-import dateformat from 'dateformat';
+
 
 
 //================== OBTENER TODOS LOS ORDENES DE PEDIDOS ==================//
@@ -48,16 +49,16 @@ export async function getPurchaseOrderDetail(req: Request, res: Response){
     const purchaseOrderID = req.params.purchase_id;
     const offset = Number(req.query.offset);
     
-  //  const state = Number(req.query.state);
-
     if(Number.isNaN(offset)) return res.status(404).json({ok: false, message: `La variable 'offset' es obligatorio!`});
 
     try {
-        const getQuery = `SELECT purchase_order_id, commodity_id, 
-        (SELECT name FROM commodity WHERE commodity_id = pod.commodity_id)name, 
-        quantity, unit_price, total_price FROM purchase_order_detail pod WHERE purchase_order_id = ${purchaseOrderID}`;
+        const getQuery = `SELECT pod.purchase_order_id, pod.commodity_id, 
+        comm.name, pod.quantity, pod.unit_price, pod.total_price 
+        FROM purchase_order_detail pod 
+        INNER JOIN commodity comm ON comm.commodity_id = pod.commodity_id
+        WHERE pod.purchase_order_id = ${purchaseOrderID} ORDER BY comm.name ASC`;
 
-        return await query(getQuery).then(data => {    
+        return await query(getQuery).then(data => {
             if(!data.ok) return res.status(data.status).json({ok: false, message: data.message})
             return res.status(data.status).json({ok: true, message: data.message, result: data.result[0]});
         });
@@ -214,6 +215,28 @@ export async function getPurchaseOrdersWithState(req: Request, res: Response){
                 data.result[0][i].paid_date = transformDate(data.result[0][i].paid_date);
             }
             if(!data.ok) return res.status(data.status).json({ok: false, message: data.message})
+            return res.status(data.status).json({ok: true, message: data.message, result: data.result[0]});
+        });
+    }catch(error) {
+        return res.status(500).json({ok: false, message: error});
+    }
+}
+
+
+export async function getPurchaseOrderByDatePhone(req: Request, res: Response){
+    try {
+        const getQuery = `SELECT purchase_order_id, provider_id, 
+        (SELECT name FROM provider WHERE provider_id = po.provider_id)provider_name, 
+        employee_id, (SELECT username FROM employee WHERE employee_id = po.employee_id)employee_name,
+        order_date, receive_date, paid_date, cancel_date, total_price, message, updated_by, 
+        (SELECT name FROM employee WHERE employee_id = po.updated_by)updated_name,
+        state, state_input FROM purchase_order po WHERE state_input = 0 ORDER BY receive_date DESC`;
+
+        return await query(getQuery).then(data => {    
+            if(!data.ok) {
+                console.log(data.message);                
+                return res.status(data.status).json({ok: false, message: data.message});
+            }
             return res.status(data.status).json({ok: true, message: data.message, result: data.result[0]});
         });
     }catch(error) {
