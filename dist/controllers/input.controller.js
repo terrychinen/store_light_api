@@ -39,7 +39,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getInputDetailByDate = exports.getInputsPhone = exports.getInputDetail = exports.searchInputByDate = exports.searchInputByOrder = exports.searchInputByCommodity = exports.searchInput = exports.deleteCategory = exports.updateInput = exports.createInputDetailPhone = exports.createInputPhone = exports.createInput = exports.getInput = exports.getReceiveOrderDetail = exports.getInputs = void 0;
+exports.deleteInputDetailPhone = exports.getInputDetailByDate = exports.getInputsPhone = exports.getInputDetail = exports.searchInputByDate = exports.searchInputByOrder = exports.searchInputByCommodity = exports.searchInput = exports.updateInput = exports.createInputDetailPhone = exports.createInputPhone = exports.createInput = exports.getInput = exports.getReceiveOrderDetail = exports.getInputs = void 0;
 var query_1 = require("../query/query");
 var dateformat_1 = __importDefault(require("dateformat"));
 //================== OBTENER TODAS LAS ENTRADAS ==================//
@@ -261,46 +261,38 @@ exports.createInputPhone = createInputPhone;
 //================== CREAR UNA ENTRADA ==================//
 function createInputDetailPhone(req, res) {
     return __awaiter(this, void 0, void 0, function () {
-        var body, input, detail, i, commodityID, storeID, quantity, getStockQuery, stock, totalStock, error_6;
+        var body, getStockQuery, stock, quantity, totalStock, error_6;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
                     body = req.body;
-                    input = body;
-                    detail = body.detail;
                     _a.label = 1;
                 case 1:
-                    _a.trys.push([1, 8, , 9]);
-                    if (Number.isNaN(input.purchase_order_id))
-                        return [2 /*return*/, res.status(404).json({ ok: false, message: "La variable 'pruchase_order_id' es obligatorio" })];
-                    i = 0;
-                    _a.label = 2;
+                    _a.trys.push([1, 5, , 6]);
+                    if (Number.isNaN(body.purchase_order_id)) {
+                        return [2 /*return*/, res.status(404).json({
+                                ok: false,
+                                message: "La variable 'purchase_order_id' es obligatorio"
+                            })];
+                    }
+                    return [4 /*yield*/, query_1.query("INSERT INTO input_detail (purchase_order_id, store_id, \n            commodity_id, quantity) VALUES (" + body.purchase_order_id + ", " + body.store_id + ", \n            " + body.commodity_id + ", " + body.quantity + ")")];
                 case 2:
-                    if (!(i < detail.length)) return [3 /*break*/, 7];
-                    commodityID = detail[i].commodity_id;
-                    storeID = detail[i].store_id;
-                    quantity = detail[i].quantity;
-                    return [4 /*yield*/, query_1.query("INSERT INTO input_detail (purchase_order_id, store_id, \n                commodity_id, quantity) VALUES (" + input.purchase_order_id + ", " + storeID + ", \n                " + commodityID + ", " + quantity + ")")];
-                case 3:
                     _a.sent();
-                    return [4 /*yield*/, query_1.query("SELECT stock FROM store_commodity WHERE \n                store_id = " + storeID + " AND commodity_id = " + commodityID)];
-                case 4:
+                    return [4 /*yield*/, query_1.query("SELECT stock FROM store_commodity WHERE \n            store_id = " + body.store_id + " AND commodity_id = " + body.commodity_id)];
+                case 3:
                     getStockQuery = _a.sent();
                     stock = Number(getStockQuery.result[0][0].stock);
+                    quantity = Number(body.quantity);
                     totalStock = stock + quantity;
-                    return [4 /*yield*/, query_1.query("UPDATE store_commodity SET stock = " + totalStock + " WHERE \n                    store_id = " + storeID + " AND commodity_id = " + commodityID)];
-                case 5:
+                    return [4 /*yield*/, query_1.query("UPDATE store_commodity SET stock = " + totalStock + " WHERE \n                store_id = " + body.store_id + " AND commodity_id = " + body.commodity_id)];
+                case 4:
                     _a.sent();
-                    _a.label = 6;
-                case 6:
-                    i++;
-                    return [3 /*break*/, 2];
-                case 7: return [2 /*return*/, res.status(200).json({ ok: true, message: 'Entrada creado correctamente' })];
-                case 8:
+                    return [2 /*return*/, res.status(200).json({ ok: true, message: 'Entrada creado correctamente' })];
+                case 5:
                     error_6 = _a.sent();
                     console.log(error_6);
                     return [2 /*return*/, res.status(500).json({ ok: false, message: error_6 })];
-                case 9: return [2 /*return*/];
+                case 6: return [2 /*return*/];
             }
         });
     });
@@ -400,50 +392,10 @@ function updateInput(req, res) {
     });
 }
 exports.updateInput = updateInput;
-//================== ELIMINAR UNA ENTRADA POR SU ID ==================//
-function deleteCategory(req, res) {
-    return __awaiter(this, void 0, void 0, function () {
-        var categoryID, checkIdQuery, error_8;
-        var _this = this;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    categoryID = req.params.category_id;
-                    checkIdQuery = "SELECT * FROM category WHERE category_id = " + categoryID;
-                    _a.label = 1;
-                case 1:
-                    _a.trys.push([1, 3, , 4]);
-                    return [4 /*yield*/, query_1.query(checkIdQuery).then(function (dataCheckId) { return __awaiter(_this, void 0, void 0, function () {
-                            var deleteQuery;
-                            return __generator(this, function (_a) {
-                                switch (_a.label) {
-                                    case 0:
-                                        if (dataCheckId.result[0][0] == null)
-                                            return [2 /*return*/, res.status(400).json({ ok: false, message: "La categor\u00EDa con el id " + categoryID + " no existe!" })];
-                                        deleteQuery = "DELETE FROM category WHERE category_id = " + categoryID;
-                                        return [4 /*yield*/, query_1.query(deleteQuery).then(function (dataDelete) {
-                                                if (!dataDelete.ok)
-                                                    return res.status(dataDelete.status).json({ ok: false, message: dataDelete.message });
-                                                return res.status(dataDelete.status).json({ ok: true, message: 'La categoría se eliminó correctamente' });
-                                            })];
-                                    case 1: return [2 /*return*/, _a.sent()];
-                                }
-                            });
-                        }); })];
-                case 2: return [2 /*return*/, _a.sent()];
-                case 3:
-                    error_8 = _a.sent();
-                    return [2 /*return*/, res.status(500).json({ ok: false, message: error_8 })];
-                case 4: return [2 /*return*/];
-            }
-        });
-    });
-}
-exports.deleteCategory = deleteCategory;
 //================== BUSCAR ENTRADA ==================//
 function searchInput(req, res) {
     return __awaiter(this, void 0, void 0, function () {
-        var search, searchBy, state, columnName, querySearch, error_9;
+        var search, searchBy, state, columnName, querySearch, error_8;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -476,8 +428,8 @@ function searchInput(req, res) {
                         })];
                 case 2: return [2 /*return*/, _a.sent()];
                 case 3:
-                    error_9 = _a.sent();
-                    return [2 /*return*/, res.status(500).json({ ok: false, message: error_9 })];
+                    error_8 = _a.sent();
+                    return [2 /*return*/, res.status(500).json({ ok: false, message: error_8 })];
                 case 4: return [2 /*return*/];
             }
         });
@@ -487,7 +439,7 @@ exports.searchInput = searchInput;
 //================== BUSCAR ENTRADA POR MERCANCIA ==================//
 function searchInputByCommodity(req, res) {
     return __awaiter(this, void 0, void 0, function () {
-        var search, inputDate, state, querySearch, error_10;
+        var search, inputDate, state, querySearch, error_9;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -510,8 +462,8 @@ function searchInputByCommodity(req, res) {
                         })];
                 case 2: return [2 /*return*/, _a.sent()];
                 case 3:
-                    error_10 = _a.sent();
-                    return [2 /*return*/, res.status(500).json({ ok: false, message: error_10 })];
+                    error_9 = _a.sent();
+                    return [2 /*return*/, res.status(500).json({ ok: false, message: error_9 })];
                 case 4: return [2 /*return*/];
             }
         });
@@ -521,7 +473,7 @@ exports.searchInputByCommodity = searchInputByCommodity;
 //================== BUSCAR ENTRADA POR ORDEN ==================//
 function searchInputByOrder(req, res) {
     return __awaiter(this, void 0, void 0, function () {
-        var search, searchBy, inputDate, state, columnName, querySearch, error_11;
+        var search, searchBy, inputDate, state, columnName, querySearch, error_10;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -555,8 +507,8 @@ function searchInputByOrder(req, res) {
                         })];
                 case 2: return [2 /*return*/, _a.sent()];
                 case 3:
-                    error_11 = _a.sent();
-                    return [2 /*return*/, res.status(500).json({ ok: false, message: error_11 })];
+                    error_10 = _a.sent();
+                    return [2 /*return*/, res.status(500).json({ ok: false, message: error_10 })];
                 case 4: return [2 /*return*/];
             }
         });
@@ -566,7 +518,7 @@ exports.searchInputByOrder = searchInputByOrder;
 //================== BUSCAR ENTRADA ==================//
 function searchInputByDate(req, res) {
     return __awaiter(this, void 0, void 0, function () {
-        var search, state, querySearch, error_12;
+        var search, state, querySearch, error_11;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -588,8 +540,8 @@ function searchInputByDate(req, res) {
                         })];
                 case 2: return [2 /*return*/, _a.sent()];
                 case 3:
-                    error_12 = _a.sent();
-                    return [2 /*return*/, res.status(500).json({ ok: false, message: error_12 })];
+                    error_11 = _a.sent();
+                    return [2 /*return*/, res.status(500).json({ ok: false, message: error_11 })];
                 case 4: return [2 /*return*/];
             }
         });
@@ -599,7 +551,7 @@ exports.searchInputByDate = searchInputByDate;
 //================== OBTENER TODOS LOS DETALLES DE LA ENTRADA ==================//
 function getInputDetail(req, res) {
     return __awaiter(this, void 0, void 0, function () {
-        var purchaseOrderID, offset, getQuery, error_13;
+        var purchaseOrderID, offset, getQuery, error_12;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -618,8 +570,8 @@ function getInputDetail(req, res) {
                         })];
                 case 2: return [2 /*return*/, _a.sent()];
                 case 3:
-                    error_13 = _a.sent();
-                    return [2 /*return*/, res.status(500).json({ ok: false, message: error_13 })];
+                    error_12 = _a.sent();
+                    return [2 /*return*/, res.status(500).json({ ok: false, message: error_12 })];
                 case 4: return [2 /*return*/];
             }
         });
@@ -629,7 +581,7 @@ exports.getInputDetail = getInputDetail;
 //================== OBTENER TODAS LAS ENTRADAS EN CELULAR ==================//
 function getInputsPhone(req, res) {
     return __awaiter(this, void 0, void 0, function () {
-        var inputDate, getQuery, error_14;
+        var inputDate, getQuery, error_13;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -650,9 +602,9 @@ function getInputsPhone(req, res) {
                         })];
                 case 2: return [2 /*return*/, _a.sent()];
                 case 3:
-                    error_14 = _a.sent();
-                    console.log(error_14);
-                    return [2 /*return*/, res.status(500).json({ ok: false, message: error_14 })];
+                    error_13 = _a.sent();
+                    console.log(error_13);
+                    return [2 /*return*/, res.status(500).json({ ok: false, message: error_13 })];
                 case 4: return [2 /*return*/];
             }
         });
@@ -662,7 +614,7 @@ exports.getInputsPhone = getInputsPhone;
 //================== OBTENER TODOS LOS DETALLES DE LA ENTRADA POR LA FECHA ==================//
 function getInputDetailByDate(req, res) {
     return __awaiter(this, void 0, void 0, function () {
-        var inputDate, getQuery, error_15;
+        var inputDate, getQuery, error_14;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -685,15 +637,66 @@ function getInputDetailByDate(req, res) {
                         })];
                 case 2: return [2 /*return*/, _a.sent()];
                 case 3:
-                    error_15 = _a.sent();
-                    console.log(error_15);
-                    return [2 /*return*/, res.status(500).json({ ok: false, message: error_15 })];
+                    error_14 = _a.sent();
+                    console.log(error_14);
+                    return [2 /*return*/, res.status(500).json({ ok: false, message: error_14 })];
                 case 4: return [2 /*return*/];
             }
         });
     });
 }
 exports.getInputDetailByDate = getInputDetailByDate;
+//================== ELIMINAR UN DETALLE DE LA ENTRADA ==================//
+function deleteInputDetailPhone(req, res) {
+    return __awaiter(this, void 0, void 0, function () {
+        var orderID, storeID, commodityID, checkIdQuery, error_15;
+        var _this = this;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    orderID = req.body.order_id;
+                    storeID = req.body.store_id;
+                    commodityID = req.body.commodity_id;
+                    checkIdQuery = "SELECT * FROM input_detail WHERE purchase_order_id = " + orderID;
+                    _a.label = 1;
+                case 1:
+                    _a.trys.push([1, 3, , 4]);
+                    return [4 /*yield*/, query_1.query(checkIdQuery).then(function (dataCheckId) { return __awaiter(_this, void 0, void 0, function () {
+                            var quantity, getStockQuery, stock, totalStock, deleteQuery;
+                            return __generator(this, function (_a) {
+                                switch (_a.label) {
+                                    case 0:
+                                        if (dataCheckId.result[0][0] == null)
+                                            return [2 /*return*/, res.status(400).json({ ok: false, message: "La entrada con el id " + orderID + " no existe!" })];
+                                        quantity = Number(dataCheckId.result[0][0].quantity);
+                                        return [4 /*yield*/, query_1.query("SELECT stock FROM store_commodity WHERE \n            store_id = " + storeID + " AND commodity_id = " + commodityID)];
+                                    case 1:
+                                        getStockQuery = _a.sent();
+                                        stock = Number(getStockQuery.result[0][0].stock);
+                                        totalStock = stock - quantity;
+                                        return [4 /*yield*/, query_1.query("UPDATE store_commodity SET stock = " + totalStock + " WHERE \n                store_id = " + storeID + " AND commodity_id = " + commodityID)];
+                                    case 2:
+                                        _a.sent();
+                                        deleteQuery = "DELETE FROM input_detail WHERE purchase_order_id = " + orderID + " \n                                    AND store_id = " + storeID + " AND commodity_id = " + commodityID;
+                                        return [4 /*yield*/, query_1.query(deleteQuery).then(function (dataDelete) {
+                                                if (!dataDelete.ok)
+                                                    return res.status(dataDelete.status).json({ ok: false, message: dataDelete.message });
+                                                return res.status(dataDelete.status).json({ ok: true, message: 'La categoría se eliminó correctamente' });
+                                            })];
+                                    case 3: return [2 /*return*/, _a.sent()];
+                                }
+                            });
+                        }); })];
+                case 2: return [2 /*return*/, _a.sent()];
+                case 3:
+                    error_15 = _a.sent();
+                    return [2 /*return*/, res.status(500).json({ ok: false, message: error_15 })];
+                case 4: return [2 /*return*/];
+            }
+        });
+    });
+}
+exports.deleteInputDetailPhone = deleteInputDetailPhone;
 function checkIfEmployeeAndPurchaseOrderExists(res, purchaseOrderID, employeeID) {
     return __awaiter(this, void 0, void 0, function () {
         var checkIfPurchaseOrderExists, checkIfEmployeeExists;

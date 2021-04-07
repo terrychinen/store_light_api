@@ -14,6 +14,10 @@ router.route('/search')
     .post(input_controller_1.searchInput);
 router.route('/phone/create')
     .post(input_controller_1.createInputPhone);
+router.route('/phone/delete/detail')
+    .post(input_controller_1.deleteInputDetailPhone);
+router.route('/phone/create/detail')
+    .post(input_controller_1.createInputDetailPhone);
 router.route('/phone/order/search')
     .get(input_controller_1.getInputsPhone)
     .post(input_controller_1.searchInputByOrder);

@@ -207,31 +207,28 @@ export async function createInputPhone(req: Request, res: Response) {
 //================== CREAR UNA ENTRADA ==================//
 export async function createInputDetailPhone(req: Request, res: Response) {
     const body = req.body;
-    const input: InputModel = body;
-    const detail: any[] = body.detail;
 
     try {
-        if(Number.isNaN(input.purchase_order_id)) return res.status(404).json({ok: false, 
-            message: `La variable 'pruchase_order_id' es obligatorio`});
-                    
-        for(let i=0; i<detail.length; i++) {
-            const commodityID = detail[i].commodity_id;
-            const storeID = detail[i].store_id;
-            const quantity = detail[i].quantity;
-
-            await query(`INSERT INTO input_detail (purchase_order_id, store_id, 
-                commodity_id, quantity) VALUES (${input.purchase_order_id}, ${storeID}, 
-                ${commodityID}, ${quantity})`);
-
-            const getStockQuery = await query(`SELECT stock FROM store_commodity WHERE 
-                store_id = ${storeID} AND commodity_id = ${commodityID}`);
-
-            const stock: number = Number(getStockQuery.result[0][0].stock);                   
-            const totalStock: number = stock + quantity; 
-
-            await query(`UPDATE store_commodity SET stock = ${totalStock} WHERE 
-                    store_id = ${storeID} AND commodity_id = ${commodityID}`);
+        if(Number.isNaN(body.purchase_order_id)) {            
+            return res.status(404).json({
+                ok: false, 
+                message: `La variable 'purchase_order_id' es obligatorio`
+            });
         }
+                    
+        await query(`INSERT INTO input_detail (purchase_order_id, store_id, 
+            commodity_id, quantity) VALUES (${body.purchase_order_id}, ${body.store_id}, 
+            ${body.commodity_id}, ${body.quantity})`);
+
+        const getStockQuery = await query(`SELECT stock FROM store_commodity WHERE 
+            store_id = ${body.store_id} AND commodity_id = ${body.commodity_id}`);
+
+        const stock: number = Number(getStockQuery.result[0][0].stock);
+        const quantity: number = Number(body.quantity);
+        const totalStock: number = stock + quantity; 
+
+        await query(`UPDATE store_commodity SET stock = ${totalStock} WHERE 
+                store_id = ${body.store_id} AND commodity_id = ${body.commodity_id}`);
 
         return res.status(200).json({ok: true, message: 'Entrada creado correctamente'});
        
@@ -322,32 +319,6 @@ export async function updateInput(req: Request, res: Response) {
         return res.status(500).json({ok: false, message: error});
     }   
 }
-
-
-
-
-//================== ELIMINAR UNA ENTRADA POR SU ID ==================//
-export async function deleteCategory(req: Request, res: Response) {
-    const categoryID = req.params.category_id;
-
-    const checkIdQuery = `SELECT * FROM category WHERE category_id = ${categoryID}`;
-
-    try {
-        return await query(checkIdQuery).then(async dataCheckId => {
-            if(dataCheckId.result[0][0] == null) return res.status(400).json({ok: false, message: `La categoría con el id ${categoryID} no existe!`});
-            const deleteQuery = `DELETE FROM category WHERE category_id = ${categoryID}`;
-    
-            return await query(deleteQuery).then(dataDelete => {
-                if(!dataDelete.ok) return res.status(dataDelete.status).json({ok: false, message: dataDelete.message})
-                return res.status(dataDelete.status).json({ok: true, message: 'La categoría se eliminó correctamente'});
-            });
-        });
-
-    }catch(error) {
-        return res.status(500).json({ok: false, message: error});
-    }
-}
-
 
 
 
@@ -533,8 +504,8 @@ export async function getInputDetail(req: Request, res: Response){
         INNER JOIN commodity c ON c.commodity_id = i.commodity_id 
         WHERE purchase_order_id = ${purchaseOrderID} ORDER BY c.name ASC`;
 
-        return await query(getQuery).then(data => {    
-            if(!data.ok) return res.status(data.status).json({ok: false, message: data.message})
+        return await query(getQuery).then(data => {
+            if(!data.ok) return res.status(data.status).json({ok: false, message: data.message})                        
             return res.status(data.status).json({ok: true, message: data.message, result: data.result[0]});
         });
     }catch(error) {
@@ -613,6 +584,48 @@ export async function getInputDetailByDate(req: Request, res: Response){
         return res.status(500).json({ok: false, message: error});
     }
 }
+
+
+
+
+//================== ELIMINAR UN DETALLE DE LA ENTRADA ==================//
+export async function deleteInputDetailPhone(req: Request, res: Response) {
+    const orderID = req.body.order_id;
+    const storeID = req.body.store_id;
+    const commodityID = req.body.commodity_id;
+
+    const checkIdQuery = `SELECT * FROM input_detail WHERE purchase_order_id = ${orderID}`;
+
+    try {
+        return await query(checkIdQuery).then(async dataCheckId => {
+            if(dataCheckId.result[0][0] == null) return res.status(400).json({ok: false, message: `La entrada con el id ${orderID} no existe!`});
+
+            const quantity: number = Number(dataCheckId.result[0][0].quantity);
+            
+            const getStockQuery = await query(`SELECT stock FROM store_commodity WHERE 
+            store_id = ${storeID} AND commodity_id = ${commodityID}`);
+
+            const stock: number = Number(getStockQuery.result[0][0].stock);
+            const totalStock: number = stock - quantity; 
+            
+            await query(`UPDATE store_commodity SET stock = ${totalStock} WHERE 
+                store_id = ${storeID} AND commodity_id = ${commodityID}`);
+
+            const deleteQuery = `DELETE FROM input_detail WHERE purchase_order_id = ${orderID} 
+                                    AND store_id = ${storeID} AND commodity_id = ${commodityID}`;
+    
+            return await query(deleteQuery).then(dataDelete => {
+                if(!dataDelete.ok) return res.status(dataDelete.status).json({ok: false, message: dataDelete.message})
+                return res.status(dataDelete.status).json({ok: true, message: 'La categoría se eliminó correctamente'});
+            });
+        });
+
+    }catch(error) {
+        return res.status(500).json({ok: false, message: error});
+    }
+
+}
+
 
 
 

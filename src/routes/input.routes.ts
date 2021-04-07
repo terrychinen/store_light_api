@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { getInputs, createInput, getInputDetail, updateInput, searchInput, searchInputByDate, getInputDetailByDate, 
-            searchInputByCommodity, searchInputByOrder, getInputsPhone, getInput, createInputPhone } from '../controllers/input.controller';
+            searchInputByCommodity, searchInputByOrder, getInputsPhone, getInput, createInputPhone, 
+            createInputDetailPhone, deleteInputDetailPhone } from '../controllers/input.controller';
 
 const router = Router();
 
@@ -20,6 +21,14 @@ router.route('/search')
 
 router.route('/phone/create')
     .post(createInputPhone);
+
+
+router.route('/phone/delete/detail')
+    .post(deleteInputDetailPhone)
+
+
+router.route('/phone/create/detail')
+    .post(createInputDetailPhone);    
 
 router.route('/phone/order/search')
     .get(getInputsPhone)
