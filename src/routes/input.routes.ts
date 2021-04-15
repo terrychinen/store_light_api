@@ -1,14 +1,15 @@
 import { Router } from 'express';
 import { getInputs, createInput, getInputDetail, updateInput, searchInput, searchInputByDate, getInputDetailByDate, 
             searchInputByCommodity, searchInputByOrder, getInputsPhone, getInput, createInputPhone, 
-            createInputDetailPhone, deleteInputDetailPhone } from '../controllers/input.controller';
+            createInputDetailPhone, deleteInputDetailPhone, updateInputDetailPhone, updateInputPhone } from '../controllers/input.controller';
 
 const router = Router();
 
 
 router.route('/')
     .get(getInputs)
-    .post(createInput);
+    .post(createInput)
+    .put(updateInputPhone);
 
 router.route('/:purchase_id')
     .get(getInputDetail)
@@ -20,7 +21,8 @@ router.route('/search')
 
 
 router.route('/phone/create')
-    .post(createInputPhone);
+    .post(createInputPhone)
+    .put(updateInputDetailPhone);    
 
 
 router.route('/phone/delete/detail')

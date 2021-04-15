@@ -5,7 +5,8 @@ var input_controller_1 = require("../controllers/input.controller");
 var router = express_1.Router();
 router.route('/')
     .get(input_controller_1.getInputs)
-    .post(input_controller_1.createInput);
+    .post(input_controller_1.createInput)
+    .put(input_controller_1.updateInputPhone);
 router.route('/:purchase_id')
     .get(input_controller_1.getInputDetail)
     .post(input_controller_1.getInput)
@@ -13,7 +14,8 @@ router.route('/:purchase_id')
 router.route('/search')
     .post(input_controller_1.searchInput);
 router.route('/phone/create')
-    .post(input_controller_1.createInputPhone);
+    .post(input_controller_1.createInputPhone)
+    .put(input_controller_1.updateInputDetailPhone);
 router.route('/phone/delete/detail')
     .post(input_controller_1.deleteInputDetailPhone);
 router.route('/phone/create/detail')

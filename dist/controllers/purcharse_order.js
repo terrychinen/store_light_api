@@ -59,6 +59,7 @@ function getPurchaseOrders(req, res) {
                     return [4 /*yield*/, query_1.query(getQuery).then(function (data) {
                             for (var i = 0; i < data.result[0].length; i++) {
                                 data.result[0][i].order_date = transformDate(data.result[0][i].order_date);
+                                data.result[0][i].waiting_date = transformDate(data.result[0][i].waiting_date);
                                 data.result[0][i].expected_date = transformDate(data.result[0][i].expected_date);
                                 data.result[0][i].receive_date = transformDate(data.result[0][i].receive_date);
                                 data.result[0][i].paid_date = transformDate(data.result[0][i].paid_date);

@@ -1,8 +1,8 @@
+import dateformat from 'dateformat';
 import { query } from '../query/query';
 import { Request, Response } from 'express';
 import { InputModel } from '../models/input.model';
 import { InputDetailModel } from '../models/input_detail.model';
-import dateformat from 'dateformat';
 
 
 
@@ -247,8 +247,8 @@ export async function updateInput(req: Request, res: Response) {
 
     const detail: any[] = req.body.detail; 
 
-    if(Number.isNaN(purchaseID) || Number.isNaN(input.state)) return res.status(404).json({ok: false, 
-        message: `La variable 'purchaseID' y 'state' son obligatorio!`});        
+    if(Number.isNaN(purchaseID) || Number.isNaN(input.state) || input.notes == null) return res.status(404).json({ok: false, 
+        message: `La variable 'purchaseID', 'notes' 'state' son obligatorio!`});        
 
     try {
         const queryCheckId = `SELECT * FROM input WHERE purchase_order_id = ${purchaseID}`;
@@ -516,20 +516,20 @@ export async function getInputDetail(req: Request, res: Response){
 
 
 //================== OBTENER TODAS LAS ENTRADAS EN CELULAR ==================//
-export async function getInputsPhone(req: Request, res: Response){
+export async function getInputsPhone(req: Request, res: Response) {
     const inputDate = req.query.input_date;
 
-    if(inputDate == null) return res.status(404).json({ok: false, 
+    if(inputDate == null) return res.status(404).json({ok: false,
         message: `La variable 'inputDate' es obligatorio!`});
 
     try {
-        const getQuery = `SELECT i.purchase_order_id, i.employee_id, 
+        const getQuery = `SELECT i.purchase_order_id, i.employee_id,
         (e.username)employee_name, i.input_date, i.notes, po.provider_id,
-        (p.name)provider_name, i.state FROM input i 
+        (p.name)provider_name, i.state, po.order_date, po.receive_date, po.total_price FROM input i 
         INNER JOIN employee e ON e.employee_id = i.employee_id
         INNER JOIN purchase_order po ON po.purchase_order_id = i.purchase_order_id
         INNER JOIN provider p ON p.provider_id = po.provider_id
-        WHERE i.state = 1 AND i.input_date LIKE '%${inputDate}%' ORDER BY i.input_date DESC`;        
+        WHERE i.state = 1 AND i.input_date LIKE '%${inputDate}%' ORDER BY i.input_date DESC`;
 
         
         return await query(getQuery).then(data => {
@@ -537,6 +537,8 @@ export async function getInputsPhone(req: Request, res: Response){
            
             for(let i=0; i<data.result[0].length; i++) {
                 data.result[0][i].input_date = transformDate(data.result[0][i].input_date);
+                data.result[0][i].order_date = transformDate(data.result[0][i].order_date);
+                data.result[0][i].receive_date = transformDate(data.result[0][i].receive_date);
             }
             return res.status(data.status).json({ok: true, message: data.message, result: data.result[0]});
         });
@@ -583,6 +585,104 @@ export async function getInputDetailByDate(req: Request, res: Response){
         console.log(error);    
         return res.status(500).json({ok: false, message: error});
     }
+}
+
+
+
+//================== ACTUALIZAR UNA ENTRADA ==================//
+export async function updateInputDetailPhone(req: Request, res: Response) {    
+    const orderID = req.body.order_id;
+    const storeID = req.body.store_id;
+    const commodityID = req.body.commodity_id;
+    const stockAPI: number = req.body.quantity;
+
+    if(Number.isNaN(orderID) || Number.isNaN(storeID) || Number.isNaN(commodityID)) return res.status(404).json({ok: false, 
+        message: `La variable 'purchaseID' y 'storeID' son obligatorio!`});        
+
+    try {
+        const queryCheckId = `SELECT * FROM input WHERE purchase_order_id = ${orderID}`;
+
+        return await query(queryCheckId).then(async dataCheckId => {
+            if(!dataCheckId.ok) return res.status(500).json({ok: false, message: dataCheckId.message});
+            if(dataCheckId.result[0][0] == null) return res.status(400).json({ok: false, message: `La entrada con el id ${orderID} no existe!`});
+
+            const getInputDetail = await query(`SELECT quantity FROM input_detail
+                WHERE purchase_order_id = ${orderID} AND store_id = ${storeID} AND commodity_id = ${commodityID}`);
+
+            const quantity = getInputDetail.result[0][0].quantity;
+
+            const getStockQuery = await query(`SELECT stock FROM store_commodity WHERE 
+                store_id = ${storeID} AND commodity_id = ${commodityID}`);
+
+            const stock: number = Number(getStockQuery.result[0][0].stock);                   
+            const totalStock: number = stock - quantity; 
+
+            await query(`UPDATE store_commodity SET stock = ${totalStock} WHERE 
+                store_id = ${storeID} AND commodity_id = ${commodityID}`);
+
+
+            await query(`DELETE FROM input_detail WHERE purchase_order_id = ${orderID} AND 
+                store_id = ${storeID} AND commodity_id = ${commodityID}`);      
+                
+              
+
+            await query (`INSERT INTO input_detail (purchase_order_id, store_id, 
+                commodity_id, quantity) VALUES (${orderID}, ${storeID}, 
+                ${commodityID}, ${stockAPI})`);
+
+            const getNewStockQuery = await query(`SELECT stock FROM store_commodity WHERE 
+                store_id = ${storeID} AND commodity_id = ${commodityID}`);
+
+            const newStock: number = Number(getNewStockQuery.result[0][0].stock);                   
+            const newTotalStock: number = newStock + stockAPI;                                     
+
+            await query(`UPDATE store_commodity SET stock = ${newTotalStock} WHERE 
+                store_id = ${storeID} AND commodity_id = ${commodityID}`);
+
+            
+            return res.status(200).json({ok: true, message: 'La entrada se actualizó correctamente'});
+        });
+    }catch(error) {
+        console.log(`${error}`);
+        return res.status(500).json({ok: false, message: error});
+    }   
+}
+
+
+
+
+//================== ACTUALIZAR UNA ENTRADA ==================//
+export async function updateInputPhone(req: Request, res: Response) {
+    const purchaseID = req.body.order_id;
+    const inputDate = req.body.input_date;
+    const notes = req.body.notes;
+
+    if(Number.isNaN(purchaseID) || inputDate == null) return res.status(404).json({ok: false, 
+        message: `La variable 'purchaseID' y 'inputDate' son obligatorio!`});        
+
+    try {
+        const queryCheckId = `SELECT * FROM input WHERE purchase_order_id = ${purchaseID}`;
+
+        return await query(queryCheckId).then(async dataCheckId => {
+            if(!dataCheckId.ok) return res.status(500).json({ok: false, message: dataCheckId.message});
+            if(dataCheckId.result[0][0] == null) return res.status(400).json({ok: false, message: `La entrada con el id ${purchaseID} no existe!`});
+
+            await query(`UPDATE purchase_order SET state_input = 1 WHERE purchase_order_id = ${purchaseID}`);
+
+            const updateQuery = await query(`UPDATE input SET input_date = "${inputDate}", notes = "${notes}" WHERE purchase_order_id = ${purchaseID}`);
+
+            if(updateQuery.ok) {                         
+                return res.status(updateQuery.status).json({ok: true, message: 'La entrada se actualizó correctamente'});
+            }else {
+                return res.status(updateQuery.status).json({ok: false, message: updateQuery.message});    
+            }
+
+        });
+
+    }catch(error) {
+        console.log(`${error}`);
+        return res.status(500).json({ok: false, message: error});
+    }   
 }
 
 

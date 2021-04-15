@@ -215,6 +215,7 @@ function updateStock(req, res) {
                 case 6: return [2 /*return*/, res.status(400).json({ ok: true, message: 'Error de stock' })];
                 case 7:
                     error_4 = _a.sent();
+                    console.log(error_4);
                     return [2 /*return*/, res.status(500).json({ ok: false, message: error_4 })];
                 case 8: return [2 /*return*/];
             }
