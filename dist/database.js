@@ -6,7 +6,7 @@ function connect() {
     var connection = promise_1.createPool({
         host: '0.0.0.0',
         port: 3306,
-        user: 'root',
+        user: 'tery',
         password: 'Aka.li$$2',
         //password:'Di.ta.lux&29',
         database: 'store_db',
