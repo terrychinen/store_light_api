@@ -52,15 +52,18 @@ function getCommodities(req, res) {
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
-                    getQuery = "SELECT comm.commodity_id, comm.category_id, \n            (SELECT c.name FROM category c WHERE c.category_id = comm.category_id)category_name, \n            comm.name, comm.state FROM commodity comm WHERE state = " + state + " LIMIT 250 \n            ORDER BY comm.name ASC";
+                    getQuery = "SELECT comm.commodity_id, comm.category_id, \n            (SELECT c.name FROM category c WHERE c.category_id = comm.category_id)category_name, \n            comm.name, comm.state FROM commodity comm WHERE state = " + state + "\n            ORDER BY comm.name ASC LIMIT 250";
                     return [4 /*yield*/, query_1.query(getQuery).then(function (data) {
-                            if (!data.ok)
+                            if (!data.ok) {
+                                console.log(data.message);
                                 return res.status(data.status).json({ ok: false, message: data.message });
+                            }
                             return res.status(data.status).json({ ok: true, message: data.message, result: data.result[0] });
                         })];
                 case 2: return [2 /*return*/, _a.sent()];
                 case 3:
                     error_1 = _a.sent();
+                    console.log(error_1);
                     return [2 /*return*/, res.status(500).json({ ok: false, message: error_1 })];
                 case 4: return [2 /*return*/];
             }
@@ -240,7 +243,7 @@ function searchCommodity(req, res) {
                     else if (searchBy == 1) {
                         columnName = 'name';
                     }
-                    querySearch = "SELECT commodity_id, name, category_id FROM commodity \n            WHERE " + columnName + " LIKE \"%" + search + "%\" AND state = " + state + " LIMIT 10";
+                    querySearch = "SELECT commodity_id, name, comm.category_id, \n            (SELECT name FROM category c WHERE c.category_id = comm.category_id)category_name FROM commodity comm\n            WHERE " + columnName + " LIKE \"%" + search + "%\" AND state = " + state + " LIMIT 10";
                     return [4 /*yield*/, query_1.query(querySearch).then(function (data) {
                             if (!data.ok)
                                 return res.status(data.status).json({ ok: false, message: data.message });

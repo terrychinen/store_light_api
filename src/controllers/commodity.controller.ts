@@ -13,14 +13,19 @@ export async function getCommodities(req: Request, res: Response){
     try {
         const getQuery = `SELECT comm.commodity_id, comm.category_id, 
             (SELECT c.name FROM category c WHERE c.category_id = comm.category_id)category_name, 
-            comm.name, comm.state FROM commodity comm WHERE state = ${state} LIMIT 250 
-            ORDER BY comm.name ASC`;
+            comm.name, comm.state FROM commodity comm WHERE state = ${state}
+            ORDER BY comm.name ASC LIMIT 250`;
 
         return await query(getQuery).then(data => {
-            if(!data.ok) return res.status(data.status).json({ok: false, message: data.message})
+            if(!data.ok){ 
+                console.log(data.message);                
+                return res.status(data.status).json({ok: false, message: data.message});
+            }
             return res.status(data.status).json({ok: true, message: data.message, result: data.result[0]});
         });
     }catch(error) {
+        console.log(error);
+        
         return res.status(500).json({ok: false, message: error});
     }
 }
@@ -142,7 +147,8 @@ export async function searchCommodity(req: Request, res: Response){
             columnName = 'name';
         }
 
-        const querySearch = `SELECT commodity_id, name, category_id FROM commodity 
+        const querySearch = `SELECT commodity_id, name, comm.category_id, 
+            (SELECT name FROM category c WHERE c.category_id = comm.category_id)category_name FROM commodity comm
             WHERE ${columnName} LIKE "%${search}%" AND state = ${state} LIMIT 10`;
 
         return await query(querySearch).then( data => {
